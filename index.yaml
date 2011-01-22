@@ -1,0 +1,5 @@
+indexes:
+- kind: GoogleUser
+  properties:
+  - name: shard
+  - name: enabled_user

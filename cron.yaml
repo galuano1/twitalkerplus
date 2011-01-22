@@ -1,0 +1,40 @@
+cron:
+- description: cron update
+  url: /cron0
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron1
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron2
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron3
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron4
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron5
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron6
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron7
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron8
+  schedule: every 1 minutes
+
+- description: cron update
+  url: /cron9
+  schedule: every 1 minutes

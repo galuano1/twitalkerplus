@@ -1,0 +1,33 @@
+application: twitalkerplus
+version: 1
+runtime: python
+api_version: 1
+
+inbound_services:
+- xmpp_message
+
+handlers:
+- url: /
+  script: web.py
+
+- url: /favicon.ico
+  static_files: favicon.ico
+  upload: favicon.ico
+  expiration: 7d
+  mime_type: image/vnd.microsoft.icon
+
+- url: /cron\d+
+  script: cron.py
+  login: admin
+
+- url: /worker
+  script: worker.py
+  login: admin
+
+- url: /_ah/xmpp/message/chat/
+  script: xmpp.py
+  login: admin
+
+- url: /admin/.*
+  script: $PYTHON_LIB/google/appengine/ext/admin
+  login: admin

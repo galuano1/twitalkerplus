@@ -1,0 +1,16 @@
+TwiTalkerPlus is a brand new python application running on Google App Engine. Its idea comes from TwiTalker, TwiMeido and FanTalk. Now it includes following features.
+- support nearly all operation on Twitter
+- support message(timeline, list, mention, direct message) push to client
+- support short id for status ( 2 or 3 digits instead of long long status id )
+- support direct authentication with given username and password
+
+Usage:
+add twitalkerplus@appspot.com as friend in gtalk, then use -oauth command to authenticate.
+use -help to get full help informations.
+
+Deployment:
+If you want deploy your own server, just modify application in app.yaml and appcfg.py update, that's enough!
+
+Credits:
+Thank you 
+If you have any new thoughts or bug reports, please contact me: @gh05tw01f
