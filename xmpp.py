@@ -720,6 +720,8 @@ class XMPP_handler(webapp.RequestHandler):
             access_token = dict(cgi.parse_qsl(resp))
             if 'oauth_token' not in access_token:
                 return _('INVALID_PIN_CODE') % args[0]
+            if oauth_token is None:
+                twitter_user.delete()
             TwitterUser.add(jid, access_token['oauth_token'], access_token['oauth_token_secret'], access_token['screen_name'])
             if self._google_user.enabled_user == '':
                 self._google_user.enabled_user = access_token['screen_name']
