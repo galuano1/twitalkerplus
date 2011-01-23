@@ -38,7 +38,7 @@ class GoogleUser(db.Model):
 
     def __getattr__(self, item):
         if item == 'jid':
-            if self._jid:
+            if not self._jid:
                 try:
                     self._jid = self.key().name()
                 except db.NotSavedError:
