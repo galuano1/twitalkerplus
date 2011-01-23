@@ -339,9 +339,6 @@ class XMPP_handler(webapp.RequestHandler):
             self._google_user.list_user = response['user']['screen_name']
             self._google_user.list_id = response['id']
             self._google_user.list_name = response['slug']
-            self._google_user.display_timeline = MODE_LIST
-            self._google_user.display_mention = True
-            self._google_user.display_direct_message = True
             return _('LIVE_MODE') % (self._google_user.list_user + '/' + self._google_user.list_name)
         raise NotImplementedError
 
