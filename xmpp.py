@@ -644,6 +644,9 @@ class XMPP_handler(webapp.RequestHandler):
                 if 'Not found' in e.message:
                     return _('USER_NOT_FOUND') % args[0]
             result['profile_image_url'] = result['profile_image_url'].replace('_normal.', '.')
+            for x in result:
+                if result[x] is None:
+                    result[x] = ''
             if 'status' in result:
                 result['status'] = result['status']['text']
             else:
