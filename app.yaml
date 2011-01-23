@@ -16,6 +16,11 @@ handlers:
   expiration: 7d
   mime_type: image/vnd.microsoft.icon
 
+- url: /robots.txt
+  static_files: robots.txt
+  upload: robots.txt
+  expiration: 7d
+
 - url: /cron\d+
   script: cron.py
   login: admin
