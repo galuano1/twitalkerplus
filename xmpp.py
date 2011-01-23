@@ -619,11 +619,15 @@ class XMPP_handler(webapp.RequestHandler):
             if not length:
                 return _('NOW_USING') % self._google_user.enabled_user + '\n'\
                        + _('ALL_TWITTER_USERS_NAME') % '\n'.join(twitter_users_name)
-            elif args[0] in twitter_users_name:
-                self._google_user.enabled_user = args[0]
-                return _('ENABLED_TWITTER_USER_CHANGED') % args[0]
             else:
-                return _('NOT_ASSOCIATED_TWITTER_USER')
+                twitter_users_name_ci = [x.lower() for x in twitter_users_name]
+                twitter_name_ci = args[0].lower()
+                if twitter_name_ci in twitter_users_name_ci:
+                    i = twitter_users_name_ci.index(twitter_name_ci)
+                    self._google_user.enabled_user = twitter_users_name[i]
+                    return _('ENABLED_TWITTER_USER_CHANGED') % self._google_user.enabled_user
+                else:
+                    return _('NOT_ASSOCIATED_TWITTER_USER')
 
     def func_user(self, args):
         length = len(args)
