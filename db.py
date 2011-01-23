@@ -4,6 +4,7 @@ import counter
 import time
 import logging
 import traceback
+import cStringIO
 
 from google.appengine.api import memcache
 from constant import *
@@ -180,17 +181,19 @@ class Db:
     @staticmethod
     def set_datastore(data):
         def datastore_set(model):
-            err = ''
+            err = cStringIO.StringIO('')
             for i in xrange(config.MAX_RETRY):
                 try:
                     data.put()
                 except BaseException:
-                    err = str(traceback.extract_stack())
+                    traceback.print_exc(file=err)
                     time.sleep(1)
                     continue
                 else:
                     return
-            logging.error(err)
+            err = err.getvalue()
+            if err:
+                logging.error(err)
         if data.is_saved():
             Db.set_cache(data)
             db.run_in_transaction(datastore_set, data)

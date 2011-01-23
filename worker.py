@@ -60,7 +60,9 @@ class worker_handler(webapp.RequestHandler):
                         if statuses[-1]['id'] > last_dm_id:
                             google_user.last_dm_id = statuses[-1]['id']
                 except BaseException:
-                    logging.error(google_user.jid + ' DM:\n' + '\n'.join(traceback.extract_stack()))
+                    err = cStringIO.StringIO('')
+                    traceback.print_exc(file=err)
+                    logging.error(google_user.jid + ' DM:\n' + err.getvalue())
 
             if google_user.display_timeline & MODE_MENTION:
                 try:
@@ -72,7 +74,9 @@ class worker_handler(webapp.RequestHandler):
                         if statuses[-1]['id'] > last_mention_id:
                             google_user.last_mention_id = statuses[-1]['id']
                 except BaseException:
-                    logging.error(google_user.jid + ' Mention:\n' + '\n'.join(traceback.extract_stack()))
+                    err = cStringIO.StringIO('')
+                    traceback.print_exc(file=err)
+                    logging.error(google_user.jid + ' Mention:\n' + err.getvalue())
 
             if google_user.display_timeline & MODE_HOME:
                 try:
@@ -84,7 +88,9 @@ class worker_handler(webapp.RequestHandler):
                         if statuses[-1]['id'] > last_msg_id:
                             google_user.last_msg_id = statuses[-1]['id']
                 except BaseException:
-                    logging.error(google_user.jid + ' Home:\n' + '\n'.join(traceback.extract_stack()))
+                    err = cStringIO.StringIO('')
+                    traceback.print_exc(file=err)
+                    logging.error(google_user.jid + ' Home:\n' + err.getvalue())
 
             if google_user.display_timeline & MODE_LIST:
                 try:
@@ -97,7 +103,9 @@ class worker_handler(webapp.RequestHandler):
                             google_user.last_list_id = statuses[-1]['id']
                 except BaseException, e:
                     if 'Not found' not in e.message:
-                        logging.error(google_user.jid + ' List:\n' + '\n'.join(traceback.extract_stack()))
+                        err = cStringIO.StringIO('')
+                        traceback.print_exc(file=err)
+                        logging.error(google_user.jid + ' List:\n' + err.getvalue())
             google_user.last_update = int(time())
             Db.set_datastore(google_user)
 
