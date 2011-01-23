@@ -25,6 +25,8 @@ class worker_handler(webapp.RequestHandler):
                               access_token_secret=twitter_user.access_token_secret)
             try:
                 self._user = api.verify_credentials()
+                if 'screen_name' not in self._user:
+                    raise twitter.TwitterError
             except twitter.TwitterError:
                 google_user.retry += 1
                 if google_user.retry >= config.MAX_RETRY:

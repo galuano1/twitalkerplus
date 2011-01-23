@@ -501,7 +501,8 @@ class XMPP_handler(webapp.RequestHandler):
         raise NotImplementedError
 
     def func_rt(self, args):
-        if len(args) > 1 and args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit()) and ' '.join(args[1:]):
+        length = len(args)
+        if length >= 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())):
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
@@ -517,7 +518,10 @@ class XMPP_handler(webapp.RequestHandler):
             except twitter.TwitterError, e:
                 if 'No status found' in e.message:
                     return _('STATUS_NOT_FOUND') % id_str
-            user_msg = ' '.join(args[1:])
+            if length > 1:
+                user_msg = ' '.join(args[1:])
+            else:
+                user_msg = ''
             if user_msg[-1].isalnum():
                 user_msg += ' '
             message = u'%sRT @%s:%s' % (user_msg, status['user']['screen_name'], status['text'])
@@ -639,7 +643,10 @@ class XMPP_handler(webapp.RequestHandler):
                 if 'Not found' in e.message:
                     return _('USER_NOT_FOUND') % args[0]
             result['profile_image_url'] = result['profile_image_url'].replace('_normal.', '.')
-            result['status'] = result['status']['text']
+            if 'status' in result:
+                result['status'] = result['status']['text']
+            else:
+                result['status'] = ''
             if result['following']:
                 result['following'] = _('YOU_FOLLOWING') % result['screen_name']
             elif result['follow_request_sent']:
