@@ -61,7 +61,6 @@ def parse_statuses(statuses, reverse=True):
         if reverse:
             statuses.reverse()
         for status in statuses:
-            Db.set_cache(status)
             msgs.append(parse_status(status))
         return '\n'.join(msgs)
     return ''

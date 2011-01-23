@@ -38,7 +38,7 @@ class GoogleUser(db.Model):
 
     def __getattr__(self, item):
         if item == 'jid':
-            if self._jid is None:
+            if self._jid:
                 try:
                     self._jid = self.key().name()
                 except db.NotSavedError:
@@ -165,8 +165,9 @@ class Db:
     @staticmethod
     def set_cache(data):
         def cache_set(key, value, namespace=None):
-            memcache.delete(key, namespace=namespace)
-            memcache.add(key, value, namespace=namespace)
+            for _ in xrange(config.MAX_RETRY):
+                if memcache.set(key, value, namespace=namespace):
+                    break
         if isinstance(data, GoogleUser):
             return cache_set(data.jid, data, namespace='jid')
         elif isinstance(data, TwitterUser):
