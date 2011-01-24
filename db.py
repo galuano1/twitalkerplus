@@ -142,11 +142,11 @@ class IdList(db.Model):
             short_id_list = memcache.get(jid, 'short_id_list')
             if short_id_list is None:
                 short_id_list = IdList.get_by_key_name(jid)
-                Db.set_cache(short_id_list)
             if short_id_list:
+                Db.set_cache(short_id_list)
                 short_id_list.short_id_list = short_id_list.short_id_list_str.split(',')
-            global _short_id_list
-            _short_id_list[jid] = short_id_list
+                global _short_id_list
+                _short_id_list[jid] = short_id_list
         return short_id_list
 
     @staticmethod

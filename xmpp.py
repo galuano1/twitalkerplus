@@ -725,7 +725,8 @@ class XMPP_handler(webapp.RequestHandler):
             TwitterUser.add(jid, access_token['oauth_token'], access_token['oauth_token_secret'], access_token['screen_name'])
             if self._google_user.enabled_user == '':
                 self._google_user.enabled_user = access_token['screen_name']
-            IdList.add(jid)
+            if IdList.get_by_jid(jid) is None:
+                IdList.add(jid)
             return _('SUCCESSFULLY_BIND') % access_token['screen_name']
         else:
             raise NotImplementedError
