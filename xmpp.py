@@ -101,7 +101,7 @@ class XMPP_handler(webapp.RequestHandler):
 
     def func_msg(self, args):
         length = len(args)
-        if length == 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())):
+        if length == 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit())):
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
@@ -137,7 +137,7 @@ class XMPP_handler(webapp.RequestHandler):
             page = args[0][1:] if length else 1
             statuses = self._api.get_mentions(page=int(page))
             return _('MENTIONS') + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
-        elif length > 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())\
+        elif length > 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit())\
             and ' '.join(args[1:])) :
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
@@ -255,7 +255,7 @@ class XMPP_handler(webapp.RequestHandler):
 
     def func_del(self, args):
         length = len(args)
-        if not length or (length == 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit()))):
+        if not length or (length == 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit()))):
             if not length:
                 short_id = None
                 id = self._user['status']['id']
@@ -348,7 +348,7 @@ class XMPP_handler(webapp.RequestHandler):
             page = args[0][1:] if length else 1
             statuses = self._api.get_favorites(page=int(page))
             return _('FAVOURITES') + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
-        elif length == 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())):
+        elif length == 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit())):
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
@@ -368,7 +368,7 @@ class XMPP_handler(webapp.RequestHandler):
         raise NotImplementedError
 
     def func_unfav(self, args):
-        if len(args) == 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())):
+        if len(args) == 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit())):
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
@@ -444,7 +444,7 @@ class XMPP_handler(webapp.RequestHandler):
         return _('LIST') % (user + '/' + str(list_id)) + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
 
     def func_ra(self, args):
-        if len(args) > 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit()) and ' '.join(args[1:])) :
+        if len(args) > 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit()) and ' '.join(args[1:])) :
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
@@ -478,7 +478,7 @@ class XMPP_handler(webapp.RequestHandler):
         raise NotImplementedError
 
     def func_re(self, args):
-        if len(args) == 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())) :
+        if len(args) == 1 and (args[0] and args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())) :
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
@@ -499,7 +499,7 @@ class XMPP_handler(webapp.RequestHandler):
 
     def func_rt(self, args):
         length = len(args)
-        if length >= 1 and (args[0].isdigit() or (args[0][0] == '#' and args[0][1:].isdigit())):
+        if length >= 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit())):
             if args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
