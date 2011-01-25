@@ -63,7 +63,7 @@ str_list = {
     'COMMAND_PREFIX': 'Command prefix is %s',
     'TWITTER_USER_DELETED': '%s is not associated with you anymore. ',
     'SPECIFY_ANOTHER_USER': 'Please specify another twitter user with "switch" command.',
-    'OAUTH_URL': 'Please visit below url to get PIN code:\n%s\nthen you should use "-bind PIN_CODE" command to actually bind your Twitter.',
+    'OAUTH_URL': 'Please visit below url to get PIN code:\n%s\nthen you should use "-bind PIN" command to actually bind your Twitter.',
     'INVALID_PIN_CODE': 'Invalid PIN code %s.',
     'SUCCESSFULLY_BIND': 'Successfully bind you with Twitter user %s.',
     'NETWORK_ERROR': 'Network error.',

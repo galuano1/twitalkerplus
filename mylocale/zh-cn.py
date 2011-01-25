@@ -63,7 +63,7 @@ str_list = {
     'COMMAND_PREFIX': u'命令前缀是 %s',
     'TWITTER_USER_DELETED': u'%s不再与你相关联。',
     'SPECIFY_ANOTHER_USER': u'请使用switch命令指定另外一个用户。',
-    'OAUTH_URL': u'请访问以下网址获取PIN码:\n%s\n然后使用"-bind PIN_CODE"命令绑定。',
+    'OAUTH_URL': u'请访问以下网址获取PIN码:\n%s\n然后使用"-bind PIN码"命令绑定。',
     'INVALID_PIN_CODE': u'无效PIN码%s。',
     'SUCCESSFULLY_BIND': u'成功绑定Twitter账户%s。',
     'NETWORK_ERROR': u'网络错误。',
