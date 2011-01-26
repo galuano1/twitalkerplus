@@ -426,7 +426,7 @@ class Api(object):
                 try:
                     json = simplejson.loads(response.content)
                 except BaseException, e:
-                    logging.error(e.__class__() + ':' + e.message + '\n' + response.content)
+                    logging.error(str(e) + ':' + e.message + '\n' + response.content)
                     json = []
                 self._check_for_twitter_error(json)
             except urlfetch.Error:

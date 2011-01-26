@@ -64,7 +64,7 @@ class worker_handler(webapp.RequestHandler):
                         if statuses[-1]['id'] > last_dm_id:
                             google_user.last_dm_id = statuses[-1]['id']
                 except BaseException:
-                    err = cStringIO.StringIO('')
+                    err = StringIO('')
                     traceback.print_exc(file=err)
                     logging.error(google_user.jid + ' DM:\n' + err.getvalue())
 
@@ -78,7 +78,7 @@ class worker_handler(webapp.RequestHandler):
                         if statuses[-1]['id'] > last_mention_id:
                             google_user.last_mention_id = statuses[-1]['id']
                 except BaseException:
-                    err = cStringIO.StringIO('')
+                    err = StringIO('')
                     traceback.print_exc(file=err)
                     logging.error(google_user.jid + ' Mention:\n' + err.getvalue())
 
@@ -92,7 +92,7 @@ class worker_handler(webapp.RequestHandler):
                         if statuses[-1]['id'] > last_msg_id:
                             google_user.last_msg_id = statuses[-1]['id']
                 except BaseException:
-                    err = cStringIO.StringIO('')
+                    err = StringIO('')
                     traceback.print_exc(file=err)
                     logging.error(google_user.jid + ' Home:\n' + err.getvalue())
 
@@ -107,7 +107,7 @@ class worker_handler(webapp.RequestHandler):
                             google_user.last_list_id = statuses[-1]['id']
                 except BaseException, e:
                     if 'Not found' not in e.message:
-                        err = cStringIO.StringIO('')
+                        err = StringIO('')
                         traceback.print_exc(file=err)
                         logging.error(google_user.jid + ' List:\n' + err.getvalue())
             google_user.last_update = int(time())

@@ -27,7 +27,7 @@
 import os
 import pytz
 import zipfile
-from cStringIO import StringIO
+from StringIO import StringIO
 
 from google.appengine.api import memcache
 

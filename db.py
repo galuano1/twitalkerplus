@@ -4,8 +4,8 @@ import counter
 import time
 import logging
 import traceback
-import cStringIO
 
+from StringIO import StringIO
 from google.appengine.api import memcache
 from constant import *
 from google.appengine.ext import db
@@ -182,7 +182,7 @@ class Db:
     @staticmethod
     def set_datastore(data):
         def datastore_set(model):
-            err = cStringIO.StringIO('')
+            err = StringIO('')
             for i in xrange(config.MAX_RETRY):
                 try:
                     data.put()
