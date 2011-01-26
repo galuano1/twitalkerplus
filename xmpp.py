@@ -262,6 +262,9 @@ class XMPP_handler(webapp.RequestHandler):
             elif args[0][0] == '#':
                 short_id = int(args[0][1:])
                 id = utils.restore_short_id(short_id, self._google_user.jid)
+            elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+                short_id = int(args[0])
+                id = utils.restore_short_id(short_id, self._google_user.jid)
             else:
                 short_id = None
                 id = long(args[0])
