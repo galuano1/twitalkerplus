@@ -19,6 +19,10 @@ class worker_handler(webapp.RequestHandler):
             google_user = GoogleUser.get_by_jid(jid)
             _ = lambda x: gettext(x, locale=google_user.locale)
             twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
+            if twitter_user is None:
+                google_user.enabled_user = ''
+                Db.set_datastore(google_user)
+                continue
             api = twitter.Api(consumer_key=config.OAUTH_CONSUMER_KEY,
                               consumer_secret=config.OAUTH_CONSUMER_SECRET,
                               access_token_key=twitter_user.access_token_key,

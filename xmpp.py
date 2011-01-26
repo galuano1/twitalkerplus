@@ -675,7 +675,8 @@ class XMPP_handler(webapp.RequestHandler):
                 if twitter_user is not None:
                     twitter_user.delete()
                     memcache.delete(self._google_user.jid+':'+user, namespace='twitter_name')
-                    self._google_user.enabled_user = ''
+                    if self._google_user.enabled_user == user:
+                        self._google_user.enabled_user = ''
                     msg += _('TWITTER_USER_DELETED') % user
             msg += _('SPECIFY_ANOTHER_USER')
             return msg
