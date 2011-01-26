@@ -9,6 +9,7 @@ from StringIO import StringIO
 from google.appengine.api import memcache
 from constant import *
 from google.appengine.ext import db
+from google.appengine.runtime import DeadlineExceededError
 
 _short_id_list = dict()
 
@@ -195,14 +196,17 @@ class Db:
             err = err.getvalue()
             if err:
                 logging.error(err)
-        for _ in xrange(config.MAX_RETRY):
-            try:
-                if data.is_saved():
-                    Db.set_cache(data)
-                    db.run_in_transaction(datastore_set, data)
-                else:
-                    db.run_in_transaction(datastore_set, data)
-                    Db.set_cache(data)
-                break
-            except db.Timeout:
-                pass
+        try:
+            for _ in xrange(config.MAX_RETRY):
+                try:
+                    if data.is_saved():
+                        Db.set_cache(data)
+                        db.run_in_transaction(datastore_set, data)
+                    else:
+                        db.run_in_transaction(datastore_set, data)
+                        Db.set_cache(data)
+                    break
+                except db.Timeout:
+                    pass
+        except DeadlineExceededError:
+            pass
