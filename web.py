@@ -17,6 +17,12 @@ class cron_handler(webapp.RequestHandler):
                 break
         self.response.out.write(_('WEB') % os.environ['APPLICATION_ID'])
 
+    def head(self):
+        return
+
+    def post(self):
+        return
+
 def main():
     application = webapp.WSGIApplication([('/', cron_handler)])
     run_wsgi_app(application)
