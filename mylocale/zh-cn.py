@@ -3,6 +3,7 @@
 str_list = {
     'WEB': u'<html><head><title>TwiTalkerPlus</title></head><body>请添加<b>%s@appspot.com</b>作为GTalk好友，然后使用-oauth命令认证。<br />更多命令帮助请用-help命令查询。<br /><a href="http://twitter.com/gh05tw01f">作者</a>&nbsp;<a href="https://github.com/gh05tw01f/twitalkerplus">源代码</a></body></html>',
     'NO_AUTHENTICATION': u'没有权限访问您的Twitter账户。',
+    'INTERNAL_SERVER_ERROR': u'Twitter服务器内部错误',
     'TIMELINE': u'*时间线：* ',
     'MENTIONS': u'*提到我的：* ',
     'DIRECT_MESSAGES': u'*私信：* ',

@@ -85,6 +85,8 @@ class XMPP_handler(webapp.RequestHandler):
                 return func(args[1:])
             except NotImplementedError:
                 return _('INVALID_COMMAND')
+            except twitter.TwitterInternalServerError:
+                return _('INTERNAL_SERVER_ERROR')
         else:
             if isinstance(self._api, Dummy):
                 return ''

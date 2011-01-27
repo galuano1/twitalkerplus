@@ -3,6 +3,7 @@
 str_list = {
     'WEB': '<html><head><title>TwiTalkerPlus</title></head><body>Please add <b>%s@appspot.com</b> as your GTalk friend, then use -oauth command to authenticate.<br />More info please refer to -help command.<br /><a href="http://twitter.com/gh05tw01f">Author</a>&nbsp;<a href="https://github.com/gh05tw01f/twitalkerplus">Source</a></body></html>',
     'NO_AUTHENTICATION': 'No authentication for your Twitter',
+    'INTERNAL_SERVER_ERROR': 'Twitter Internal Server Error!',
     'TIMELINE': '*Timeline:* ',
     'MENTIONS': '*Mentions:* ',
     'DIRECT_MESSAGES': '*Direct Messages:* ',

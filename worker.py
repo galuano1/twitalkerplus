@@ -63,6 +63,8 @@ class worker_handler(webapp.RequestHandler):
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_dm_id:
                             google_user.last_dm_id = statuses[-1]['id']
+                except twitter.TwitterInternalServerError:
+                    pass
                 except BaseException:
                     err = StringIO('')
                     traceback.print_exc(file=err)
@@ -77,6 +79,8 @@ class worker_handler(webapp.RequestHandler):
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_mention_id:
                             google_user.last_mention_id = statuses[-1]['id']
+                except twitter.TwitterInternalServerError:
+                    pass
                 except BaseException:
                     err = StringIO('')
                     traceback.print_exc(file=err)
@@ -91,6 +95,8 @@ class worker_handler(webapp.RequestHandler):
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_msg_id:
                             google_user.last_msg_id = statuses[-1]['id']
+                except twitter.TwitterInternalServerError:
+                    pass
                 except BaseException:
                     err = StringIO('')
                     traceback.print_exc(file=err)
@@ -105,6 +111,8 @@ class worker_handler(webapp.RequestHandler):
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_list_id:
                             google_user.last_list_id = statuses[-1]['id']
+                except twitter.TwitterInternalServerError:
+                    pass
                 except BaseException, e:
                     if 'Not found' not in e.message:
                         err = StringIO('')

@@ -12,7 +12,6 @@ from google.appengine.api import urlfetch
 from google.appengine.api import memcache
 
 class TwitterError(Exception):
-    '''Base class for Twitter errors'''
     _message = ''
     @property
     def message(self):
@@ -23,7 +22,10 @@ class TwitterError(Exception):
             self._message = args[0]
 
 class TwitterAuthenticationError(TwitterError):
-    'Twitter Authentication Error class'
+    pass
+
+class TwitterInternalServerError(TwitterError):
+    pass
 
 class Api(object):
     DEFAULT_RETRY = 3 # retry times if failed
@@ -423,12 +425,16 @@ class Api(object):
         for i in xrange(self._retry + 1):
             try:
                 response = urlfetch.fetch(url, payload=encoded_post_data, method=http_method, headers=headers)
-                try:
-                    json = simplejson.loads(response.content)
-                except BaseException, e:
-                    logging.error(str(e) + ':' + e.message + '\n' + response.content)
-                    json = []
-                self._check_for_twitter_error(json)
+                text = response.content
+                if '500 Internal Server Error' not in text:
+                    try:
+                        json = simplejson.loads(text)
+                    except BaseException, e:
+                        logging.error(str(e) + ':' + e.message + '\n' + response.content)
+                        json = []
+                    self._check_for_twitter_error(json)
+                else:
+                    raise TwitterInternalServerError
             except urlfetch.Error:
                 continue
             except TwitterError, e:
