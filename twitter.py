@@ -422,26 +422,21 @@ class Api(object):
         else:
             url = self._build_url(url, extra_params=extra_params)
             encoded_post_data = self._encode_post_data(post_data)
+        json = []
         for i in xrange(self._retry + 1):
             try:
                 response = urlfetch.fetch(url, payload=encoded_post_data, method=http_method, headers=headers)
-                text = response.content
-                if '500 Internal Server Error' not in text:
-                    try:
-                        json = simplejson.loads(text)
-                    except BaseException, e:
-                        logging.error(str(e) + ':' + e.message + '\n' + response.content)
-                        json = []
-                    self._check_for_twitter_error(json)
-                else:
-                    raise TwitterInternalServerError
             except urlfetch.Error:
                 continue
-            except TwitterError, e:
-                if i >= self._retry:
-                    raise e
-                else:
-                    continue
-            else:
-                break
+            text = response.content
+            try:
+                json = simplejson.loads(text)
+            except ValueError:
+                if '500 Internal Server Error' in text:
+                    if i >= self._retry:
+                        raise TwitterInternalServerError
+                    else:
+                        continue
+            self._check_for_twitter_error(json)
+            break
         return json
