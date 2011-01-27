@@ -524,7 +524,7 @@ class XMPP_handler(webapp.RequestHandler):
                 user_msg = ' '.join(args[1:])
             else:
                 user_msg = ''
-            if user_msg[-1].isalnum():
+            if user_msg and user_msg[-1].isalnum():
                 user_msg += ' '
             message = u'%sRT @%s:%s' % (user_msg, status['user']['screen_name'], status['text'])
             if len(message) > CHARACTER_LIMIT:
