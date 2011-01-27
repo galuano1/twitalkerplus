@@ -5,6 +5,7 @@ from google.appengine.api import taskqueue
 from google.appengine.api import xmpp
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.runtime import DeadlineExceededError
 
 MAX_RETRY = 3
 
@@ -42,20 +43,23 @@ class cron_handler(webapp.RequestHandler):
         self.tasks = list()
         self.jids = list()
         data = GoogleUser.get_all(shard=cron_id)
-        for u in data:
-            if u.display_timeline or u.msg_template.strip():
-                time_delta = int(time()) - u.last_update
-                if time_delta >= u.interval * 60 - 30:
-                    try:
-                        flag = xmpp.get_presence(u.jid)
-                    except xmpp.Error:
-                        flag = False
-                    if not flag:
-                        continue
-                    Db.set_cache(u)
-                    add_task_by_jid(u.jid)
-        flush_jids()
-        flush_tasks()
+        try:
+            for u in data:
+                if u.display_timeline or u.msg_template.strip():
+                    time_delta = int(time()) - u.last_update
+                    if time_delta >= u.interval * 60 - 30:
+                        try:
+                            flag = xmpp.get_presence(u.jid)
+                        except xmpp.Error:
+                            flag = False
+                        if not flag:
+                            continue
+                        Db.set_cache(u)
+                        add_task_by_jid(u.jid)
+            flush_jids()
+            flush_tasks()
+        except DeadlineExceededError:
+            pass
 
 def main():
     application = webapp.WSGIApplication([('/cron(\d+)', cron_handler)], debug=True)
