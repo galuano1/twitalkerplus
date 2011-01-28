@@ -120,7 +120,7 @@ class worker_handler(webapp.RequestHandler):
                         traceback.print_exc(file=err)
                         logging.error(google_user.jid + ' List:\n' + err.getvalue())
             if msg_list:
-                xmpp.send_message(google_user.jid, '================================================='.join(msg_list))
+                xmpp.send_message(google_user.jid, '=================================================\n'.join(msg_list))
             google_user.last_update = int(time())
             Db.set_datastore(google_user)
 

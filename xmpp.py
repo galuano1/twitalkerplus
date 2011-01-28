@@ -46,7 +46,7 @@ class XMPP_handler(webapp.RequestHandler):
             except twitter.TwitterAuthenticationError:
                 self._google_user.retry += 1
                 if self._google_user.retry >= config.MAX_RETRY:
-                    GoogleUser.disable(self._google_user)
+                    GoogleUser.disable(self._google_user.jid)
                     xmpp.send_message(self._google_user.jid, _('NO_AUTHENTICATION'))
                 else:
                     Db.set_datastore(self._google_user)
@@ -731,8 +731,8 @@ class XMPP_handler(webapp.RequestHandler):
             TwitterUser.add(jid, access_token['oauth_token'], access_token['oauth_token_secret'], access_token['screen_name'])
             if self._google_user.enabled_user == '':
                 self._google_user.enabled_user = access_token['screen_name']
-            if IdList.get_by_jid(jid) is None:
-                IdList.add(jid)
+            if IdList.get_by_jid(jid, self._google_user.shard) is None:
+                IdList.add(jid, self._google_user.shard)
             return _('SUCCESSFULLY_BIND') % access_token['screen_name']
         else:
             raise NotImplementedError

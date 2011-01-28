@@ -4,6 +4,7 @@ import counter
 import time
 import logging
 import traceback
+import sys
 
 from StringIO import StringIO
 from google.appengine.api import memcache
@@ -130,24 +131,30 @@ class IdList(db.Model):
     mention_list_pointer = db.IntegerProperty(default=0)
 
     @staticmethod
-    def add(jid):
+    def add(jid, shard):
         data = ','.join('0' for _ in xrange(MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM))
-        short_id_list = IdList(key_name=jid, short_id_list_str=data)
+        cls = type('IdList%d' % shard, (IdList,), {})
+        short_id_list = cls(key_name=jid, short_id_list_str=data)
         Db.set_datastore(short_id_list)
 
     @staticmethod
-    def get_by_jid(jid):
+    def get_by_jid(jid, shard):
         if jid in _short_id_list:
             short_id_list = _short_id_list[jid]
         else:
+            cls = type('IdList%d' % shard, (IdList,), {})
+            setattr(sys.modules[__name__], cls.__name__, cls)
             short_id_list = memcache.get(jid, 'short_id_list')
             if short_id_list is None:
-                short_id_list = IdList.get_by_key_name(jid)
-            if short_id_list:
+                cls = type('IdList%d' % shard, (IdList,), {})
+                short_id_list = cls.get_by_key_name(jid)
+            if not short_id_list:
+                short_id_list = IdList.add(jid, shard)
+            else:
                 Db.set_cache(short_id_list)
-                short_id_list.short_id_list = short_id_list.short_id_list_str.split(',')
-                global _short_id_list
-                _short_id_list[jid] = short_id_list
+            short_id_list.short_id_list = short_id_list.short_id_list_str.split(',')
+            global _short_id_list
+            _short_id_list[jid] = short_id_list
         return short_id_list
 
     @staticmethod
@@ -175,6 +182,7 @@ class Db:
             key_name = data.twitter_name if data.twitter_name is not None else ''
             return cache_set(key_name, data, namespace='twitter_name')
         elif isinstance(data, IdList):
+            setattr(sys.modules[__name__], data.__class__.__name__, data.__class__)
             return cache_set(data.key().name(), data, namespace='short_id_list')
         elif type(data) is dict and 'id_str' in data:
             return cache_set(data['id_str'], data, namespace='status')

@@ -68,7 +68,7 @@ def parse_statuses(statuses, reverse=True):
 
 def generate_short_id(id, is_mention=False):
     id = str(id)
-    id_list = IdList.get_by_jid(_jid)
+    id_list = IdList.get_by_jid(_jid, _user.shard)
     if id in id_list.short_id_list:
         return id_list.short_id_list.index(id)
     else:
@@ -91,7 +91,7 @@ def generate_short_id(id, is_mention=False):
 
 def restore_short_id(short_id, jid):
     if short_id < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
-        id_list = IdList.get_by_jid(jid)
+        id_list = IdList.get_by_jid(jid, _user.shard)
         id = id_list.short_id_list[short_id]
         if id:
             return int(id)
