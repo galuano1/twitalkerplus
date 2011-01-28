@@ -53,13 +53,14 @@ class worker_handler(webapp.RequestHandler):
             last_mention_id = google_user.last_mention_id if google_user.last_mention_id else None
             last_dm_id = google_user.last_dm_id if google_user.last_dm_id else None
             last_list_id = google_user.last_list_id if google_user.last_list_id else None
+            msg_list = []
 
             if google_user.display_timeline & MODE_DM:
                 try:
                     statuses = api.get_direct_messages(since_id=last_dm_id)
                     content = utils.parse_statuses(statuses)
                     if content.strip():
-                        xmpp.send_message(google_user.jid, _('DIRECT_MESSAGES') + '\n\n' + content)
+                        msg_list.append(_('DIRECT_MESSAGES') + '\n\n' + content)
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_dm_id:
                             google_user.last_dm_id = statuses[-1]['id']
@@ -75,7 +76,7 @@ class worker_handler(webapp.RequestHandler):
                     statuses = api.get_mentions(since_id=last_mention_id)
                     content = utils.parse_statuses(statuses)
                     if content.strip():
-                        xmpp.send_message(google_user.jid, _('MENTIONS') + '\n\n' + content)
+                        msg_list.append(_('MENTIONS') + '\n\n' + content)
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_mention_id:
                             google_user.last_mention_id = statuses[-1]['id']
@@ -91,7 +92,7 @@ class worker_handler(webapp.RequestHandler):
                     statuses = api.get_home_timeline(since_id=last_msg_id)
                     content = utils.parse_statuses(statuses)
                     if content.strip():
-                        xmpp.send_message(google_user.jid, _('TIMELINE') + '\n\n' + content)
+                        msg_list.append(_('TIMELINE') + '\n\n' + content)
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_msg_id:
                             google_user.last_msg_id = statuses[-1]['id']
@@ -107,7 +108,7 @@ class worker_handler(webapp.RequestHandler):
                     statuses = api.get_list_statuses(user=google_user.list_user, id=google_user.list_id, since_id=last_list_id)
                     content = utils.parse_statuses(statuses)
                     if content.strip():
-                        xmpp.send_message(google_user.jid, _('LIST') % (google_user.list_user + '/' + google_user.list_name) + '\n\n' + content)
+                        msg_list.append(_('LIST') % (google_user.list_user + '/' + google_user.list_name) + '\n\n' + content)
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > last_list_id:
                             google_user.last_list_id = statuses[-1]['id']
@@ -118,6 +119,8 @@ class worker_handler(webapp.RequestHandler):
                         err = StringIO('')
                         traceback.print_exc(file=err)
                         logging.error(google_user.jid + ' List:\n' + err.getvalue())
+            if msg_list:
+                xmpp.send_message(google_user.jid, '================================================='.join(msg_list))
             google_user.last_update = int(time())
             Db.set_datastore(google_user)
 
