@@ -59,8 +59,9 @@ class cron_handler(webapp.RequestHandler):
             flush_jids()
             flush_tasks()
         except DeadlineExceededError:
-            pass
-
+            self.response.clear()
+            self.response.set_status(500)
+            self.response.out.write("This operation could not be completed in time...")
 def main():
     application = webapp.WSGIApplication([('/cron(\d+)', cron_handler)], debug=True)
     run_wsgi_app(application)

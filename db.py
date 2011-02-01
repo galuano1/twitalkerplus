@@ -136,6 +136,7 @@ class IdList(db.Model):
         cls = type('IdList%d' % shard, (IdList,), {})
         short_id_list = cls(key_name=jid, short_id_list_str=data)
         Db.set_datastore(short_id_list)
+        return short_id_list
 
     @staticmethod
     def get_by_jid(jid, shard):
@@ -148,7 +149,7 @@ class IdList(db.Model):
             if short_id_list is None:
                 cls = type('IdList%d' % shard, (IdList,), {})
                 short_id_list = cls.get_by_key_name(jid)
-            if not short_id_list:
+            if short_id_list is None:
                 short_id_list = IdList.add(jid, shard)
             else:
                 Db.set_cache(short_id_list)
