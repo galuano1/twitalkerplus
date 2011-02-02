@@ -23,6 +23,7 @@ class GoogleUser(db.Model):
     last_list_id = db.IntegerProperty(default=0)
     last_msg_id = db.IntegerProperty(default=0)
     last_mention_id = db.IntegerProperty(default=0)
+    last_home_mention_id = db.IntegerProperty(default=0)
     last_dm_id = db.IntegerProperty(default=0)
     bold_username = db.BooleanProperty(default=True)
     command_prefix = db.StringProperty(default='-')

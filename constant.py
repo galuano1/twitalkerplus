@@ -22,8 +22,6 @@ MAX_MENTION_ID_LIST_NUM = 100
 
 MAX_REPLY_STATUS = 4
 
-MAX_EXECUTION_TIME = 28 # should not large than 30, in seconds
-
 CRON_NUM = 10
 
 TASK_QUEUE_NUM = 10
