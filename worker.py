@@ -49,34 +49,45 @@ class worker_handler(webapp.RequestHandler):
                 google_user.enabled_user = self._user['screen_name']
                 Db.set_cache(google_user)
             utils.set_jid(google_user.jid)
+            last_msg_id = google_user.last_msg_id
             msg_list = []
+            home_statuses = []
             home_mention_statuses = []
 
             if google_user.display_timeline & MODE_HOME:
+                home_rpc = api.get_home_timeline(since_id=last_msg_id, async=True)
+            else:
+                home_rpc = api.get_home_timeline(since_id=google_user.last_mention_id, async=True)
+            if google_user.display_timeline & MODE_LIST:
+                list_rpc = api.get_list_statuses(user=google_user.list_user, id=google_user.list_id, since_id=google_user.last_list_id, async=True)
+            else:
+                list_rpc = None
+            if google_user.display_timeline & MODE_MENTION:
+                mention_rpc = api.get_mentions(since_id=google_user.last_mention_id, async=True)
+            else:
+                mention_rpc = None
+            if google_user.display_timeline & MODE_DM:
+                dm_rpc = api.get_direct_messages(since_id=google_user.last_dm_id, async=True)
+            else:
+                dm_rpc = None
+            if google_user.display_timeline & MODE_HOME:
                 try:
-                    statuses = api.get_home_timeline(since_id=google_user.last_msg_id)
-                    content = utils.parse_statuses(statuses)
+                    home_statuses = api._process_result(home_rpc)
+                    content = utils.parse_statuses(home_statuses)
                     if content.strip():
                         msg_list.append(_('TIMELINE') + '\n\n' + content)
                         IdList.flush(google_user.jid)
-                        if statuses[-1]['id'] > google_user.last_msg_id:
-                            google_user.last_msg_id = statuses[-1]['id']
-                    if google_user.display_timeline & MODE_MENTION:
-                        at_username = '@'+google_user.enabled_user
-                        for status in statuses:
-                            if at_username in status['text']:
-                                home_mention_statuses.append(status)
-                        google_user.last_home_mention_id = google_user.last_msg_id
+                        if home_statuses[-1]['id'] > last_msg_id:
+                            google_user.last_msg_id = home_statuses[-1]['id']
                 except twitter.TwitterInternalServerError:
                     pass
                 except BaseException:
                     err = StringIO('')
                     traceback.print_exc(file=err)
                     logging.error(google_user.jid + ' Home:\n' + err.getvalue())
-
             if google_user.display_timeline & MODE_LIST:
                 try:
-                    statuses = api.get_list_statuses(user=google_user.list_user, id=google_user.list_id, since_id=google_user.last_list_id)
+                    statuses = api._process_result(list_rpc)
                     content = utils.parse_statuses(statuses)
                     if content.strip():
                         msg_list.append(_('LIST') % (google_user.list_user + '/' + google_user.list_name) + '\n\n' + content)
@@ -90,17 +101,24 @@ class worker_handler(webapp.RequestHandler):
                         err = StringIO('')
                         traceback.print_exc(file=err)
                         logging.error(google_user.jid + ' List:\n' + err.getvalue())
-
             if google_user.display_timeline & MODE_MENTION:
                 try:
-                    statuses = api.get_mentions(since_id=google_user.last_mention_id)
+                    statuses = api._process_result(mention_rpc)
                     if not google_user.display_timeline & MODE_HOME:
-                        home_statuses = api.get_home_timeline(since_id=google_user.last_home_mention_id)
-                        if home_statuses:
-                            google_user.last_home_mention_id = home_statuses[0]['id']
-                            at_username = '@'+google_user.enabled_user
-                            home_mention_statuses = [x for x in home_statuses if at_username in x['text']]
-                        del home_statuses
+                        try:
+                                home_statuses = api._process_result(home_rpc)
+                        except twitter.TwitterInternalServerError:
+                            pass
+                        except BaseException:
+                            err = StringIO('')
+                            traceback.print_exc(file=err)
+                            logging.error(google_user.jid + ' Home:\n' + err.getvalue())
+                    if home_statuses:
+                        if home_statuses[0]['id'] > google_user.last_mention_id:
+                            google_user.last_mention_id = home_statuses[0]['id']
+                        at_username = '@'+google_user.enabled_user
+                        home_mention_statuses = [x for x in home_statuses if at_username in x['text']]
+                    del home_statuses
                     if home_mention_statuses:
                         statuses += home_mention_statuses
                         statuses.sort(cmp=lambda x,y: cmp(x['id'], y['id']))
@@ -116,17 +134,15 @@ class worker_handler(webapp.RequestHandler):
                         IdList.flush(google_user.jid)
                         if statuses[-1]['id'] > google_user.last_mention_id:
                             google_user.last_mention_id = statuses[-1]['id']
-                            google_user.last_home_mention_id = google_user.last_mention_id
                 except twitter.TwitterInternalServerError:
                     pass
                 except BaseException:
                     err = StringIO('')
                     traceback.print_exc(file=err)
                     logging.error(google_user.jid + ' Mention:\n' + err.getvalue())
-
             if google_user.display_timeline & MODE_DM:
                 try:
-                    statuses = api.get_direct_messages(since_id=google_user.last_dm_id)
+                    statuses = api._process_result(dm_rpc)
                     content = utils.parse_statuses(statuses)
                     if content.strip():
                         msg_list.append(_('DIRECT_MESSAGES') + '\n\n' + content)

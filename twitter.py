@@ -28,12 +28,9 @@ class TwitterInternalServerError(TwitterError):
     pass
 
 class Api(object):
-    DEFAULT_RETRY = 3 # retry times if failed
-
     def __init__(self, consumer_key=None, consumer_secret=None, access_token_key=None, access_token_secret=None,
                  input_encoding=None, request_headers=None, base_url=None):
         self._urllib = urllib2
-        self._retry = Api.DEFAULT_RETRY
         self._input_encoding = input_encoding
         self._oauth_consumer = None
         self._initialize_request_headers(request_headers)
@@ -62,7 +59,7 @@ class Api(object):
         self._access_token_secret = None
         self._oauth_consumer = None
 
-    def get_home_timeline(self, page=None, since_id=None, include_rts=1, include_entities=1):
+    def get_home_timeline(self, page=None, since_id=None, include_rts=1, include_entities=1, async=False):
         parameters = {}
         if page:
             parameters['page'] = page
@@ -73,7 +70,7 @@ class Api(object):
         if include_entities:
             parameters['include_entities'] = 1
         url = '%s/statuses/home_timeline.json' % self.base_url
-        return self._fetch_url(url, parameters=parameters)
+        return self._fetch_url(url, parameters=parameters, async=async)
 
     def get_friends_timeline(self, count=None, page=None, since_id=None, retweets=1, include_entities=1):
         url = '%s/statuses/friends_timeline.json' % self.base_url
@@ -198,7 +195,7 @@ class Api(object):
         url = '%s/users/show/%s.json' % (self.base_url, user)
         return self._fetch_url(url)
 
-    def get_direct_messages(self, since_id=None, page=None, include_entities=1):
+    def get_direct_messages(self, since_id=None, page=None, include_entities=1, async=False):
         url = '%s/direct_messages.json' % self.base_url
         parameters = {}
         if since_id:
@@ -207,7 +204,7 @@ class Api(object):
             parameters['page'] = page
         if include_entities:
             parameters['include_entities'] = include_entities
-        return self._fetch_url(url, parameters=parameters)
+        return self._fetch_url(url, parameters=parameters, async=async)
 
     def post_direct_message(self, user, text):
         url = '%s/direct_messages/new.json' % self.base_url
@@ -248,7 +245,7 @@ class Api(object):
             url = '%s/favorites.json' % self.base_url
         return self._fetch_url(url, parameters=parameters)
 
-    def get_mentions(self, since_id=None, max_id=None, page=None, include_entities=1):
+    def get_mentions(self, since_id=None, max_id=None, page=None, include_entities=1, async=False):
         url = '%s/statuses/mentions.json' % self.base_url
         parameters = {}
         if since_id:
@@ -259,7 +256,7 @@ class Api(object):
             parameters['page'] = page
         if include_entities:
             parameters['include_entities'] = include_entities
-        return self._fetch_url(url, parameters=parameters)
+        return self._fetch_url(url, parameters=parameters, async=async)
 
     def create_list(self, user, name, mode=None, description=None):
         url = '%s/%s/lists.json' % (self.base_url, user)
@@ -303,7 +300,7 @@ class Api(object):
         url = '%s/%s/lists/%s.json' % (self.base_url, user, id)
         return self._fetch_url(url)
 
-    def get_list_statuses(self, user, id, since_id=None, max_id=None, page=None, include_entities=1):
+    def get_list_statuses(self, user, id, since_id=None, max_id=None, page=None, include_entities=1, async=False):
         url = '%s/%s/lists/%s/statuses.json' % (self.base_url, user, id)
         parameters = {}
         if since_id:
@@ -314,7 +311,7 @@ class Api(object):
             parameters['page'] = page
         if include_entities:
             parameters['include_entities'] = include_entities
-        return self._fetch_url(url, parameters=parameters)
+        return self._fetch_url(url, parameters=parameters, async=async)
 
     def create_block(self, user):
         url = '%s/blocks/create.json' % self.base_url
@@ -400,7 +397,7 @@ class Api(object):
                 raise TwitterAuthenticationError
             raise TwitterError(data['error'])
 
-    def _fetch_url(self, url, post_data=None, parameters=None, http_method='GET'):
+    def _fetch_url(self, url, post_data=None, parameters=None, http_method='GET', async=False):
         extra_params = {}
         if parameters is not None:
             extra_params.update(parameters)
@@ -422,21 +419,24 @@ class Api(object):
         else:
             url = self._build_url(url, extra_params=extra_params)
             encoded_post_data = self._encode_post_data(post_data)
-        json = []
-        for i in xrange(self._retry + 1):
-            try:
-                response = urlfetch.fetch(url, payload=encoded_post_data, method=http_method, headers=headers)
-            except urlfetch.Error:
-                continue
-            text = response.content
-            try:
-                json = simplejson.loads(text)
-            except ValueError:
-                if '500 Internal Server Error' in text:
-                    if i >= self._retry:
-                        raise TwitterInternalServerError
-                    else:
-                        continue
-            self._check_for_twitter_error(json)
-            break
+        rpc = urlfetch.create_rpc()
+        urlfetch.make_fetch_call(rpc, url, payload=encoded_post_data, method=http_method, headers=headers)
+        if async:
+            return rpc
+        else:
+            return self._process_result(rpc)
+
+    def _process_result(self, rpc):
+        try:
+            response = rpc.get_result()
+        except urlfetch.Error:
+            return []
+        try:
+            json = simplejson.loads(response.content)
+        except ValueError:
+            if '500 Internal Server Error' in response.content:
+                raise TwitterInternalServerError
+            else:
+                return []
+        self._check_for_twitter_error(json)
         return json
