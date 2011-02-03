@@ -39,7 +39,7 @@ str_list = {
     'FAVOURITES': u'*收藏：* ',
     'USER_TIMELINE': u'*用户%s的时间线：* ',
     'SUCCESSFULLY_RETWEET': u'成功转发%s :)',
-    'SUCCESSFULLY_RT': u'成功RT%s :)',
+    'SUCCESSFULLY_RT': u'成功RT%s :) 内容为：\n%s',
     'CURRENT_TIMEZONE': u'你当前的时区为%s',
     'INVALID_TIMEZONE': u'时区不正确。',
     'SET_TIMEZONE_SUCCESSFULLY': u'设置时区成功 :)',

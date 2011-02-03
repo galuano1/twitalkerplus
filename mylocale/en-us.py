@@ -39,7 +39,7 @@ str_list = {
     'FAVOURITES': '*Favorites:* ',
     'USER_TIMELINE': '*User %s Timeline:* ',
     'SUCCESSFULLY_RETWEET': 'Successfully retweet %s :)',
-    'SUCCESSFULLY_RT': 'Successfully RT %s :)',
+    'SUCCESSFULLY_RT': 'Successfully RT %s as following: :)\n%s',
     'CURRENT_TIMEZONE': 'Your current timezone is %s',
     'INVALID_TIMEZONE': 'Timezone is invalid.',
     'SET_TIMEZONE_SUCCESSFULLY': 'Successfully set your timezone :)',

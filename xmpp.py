@@ -530,11 +530,16 @@ class XMPP_handler(webapp.RequestHandler):
             if len(message) > CHARACTER_LIMIT:
                 message = message[:138] + '..'
             try:
-                self._api.post_update(message, id)
+                json = self._api.post_update(message, id)
             except twitter.TwitterError, e:
                 if 'Status is a duplicate' in e.message:
                     return _('STATUS_DUPLICATE')
-            return _('SUCCESSFULLY_RT') % id_str
+                else:
+                    logging.debug('RT Error:')
+                    logging.error(e)
+                    return ''
+            else:
+                return _('SUCCESSFULLY_RT') % (id_str, json['text'])
         raise NotImplementedError
 
     def func_timezone(self, args):
