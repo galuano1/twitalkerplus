@@ -121,7 +121,7 @@ class worker_handler(webapp.RequestHandler):
                     del home_statuses
                     if home_mention_statuses:
                         statuses += home_mention_statuses
-                        statuses.sort(cmp=lambda x,y: cmp(x['id'], y['id']))
+                        statuses.sort(cmp=lambda x,y: cmp(x['id'], y['id']), reverse=True)
                         last = statuses[-1]['id']
                         for i in range(len(statuses)-2, -1, -1):
                             if last == statuses[i]['id']:
