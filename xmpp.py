@@ -520,6 +520,9 @@ class XMPP_handler(webapp.RequestHandler):
             except twitter.TwitterError, e:
                 if 'No status found' in e.message:
                     return _('STATUS_NOT_FOUND') % id_str
+                else:
+                    logging.error(e)
+                    return ''
             if length > 1:
                 user_msg = ' '.join(args[1:])
             else:

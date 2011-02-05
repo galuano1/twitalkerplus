@@ -55,12 +55,14 @@ def parse_status(status):
         msg_dict['source'] = ''
     return Template(_user.msg_template).safe_substitute(msg_dict)
 
-def parse_statuses(statuses, reverse=True):
+def parse_statuses(statuses, reverse=True, filter_self=False):
     if statuses:
         msgs = list()
         if reverse:
             statuses.reverse()
         for status in statuses:
+            if filter_self and 'user' in status and status['user']['screen_name'] == _user.enabled_user:
+                continue
             msgs.append(parse_status(status))
         return '\n'.join(msgs)
     return ''

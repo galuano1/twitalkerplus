@@ -73,7 +73,7 @@ class worker_handler(webapp.RequestHandler):
             if google_user.display_timeline & MODE_HOME:
                 try:
                     home_statuses = api._process_result(home_rpc)
-                    content = utils.parse_statuses(home_statuses)
+                    content = utils.parse_statuses(home_statuses, filter_self=True)
                     if content.strip():
                         msg_list.append(_('TIMELINE') + '\n\n' + content)
                         IdList.flush(google_user.jid)
@@ -88,7 +88,7 @@ class worker_handler(webapp.RequestHandler):
             if google_user.display_timeline & MODE_LIST:
                 try:
                     statuses = api._process_result(list_rpc)
-                    content = utils.parse_statuses(statuses)
+                    content = utils.parse_statuses(statuses, filter_self=True)
                     if content.strip():
                         msg_list.append(_('LIST') % (google_user.list_user + '/' + google_user.list_name) + '\n\n' + content)
                         IdList.flush(google_user.jid)
@@ -128,7 +128,7 @@ class worker_handler(webapp.RequestHandler):
                                 del statuses[i]
                             else:
                                 last = statuses[i]['id']
-                    content = utils.parse_statuses(statuses)
+                    content = utils.parse_statuses(statuses, filter_self=True)
                     if content.strip():
                         msg_list.append(_('MENTIONS') + '\n\n' + content)
                         IdList.flush(google_user.jid)
