@@ -6,6 +6,7 @@ from string import Template
 from datetime import datetime
 from db import *
 from email.utils import parsedate
+from xml.sax.saxutils import unescape
 
 _jid = None
 _user = None
@@ -19,7 +20,7 @@ def set_jid(jid):
 def parse_status(status):
     if 'retweeted_status' in status and _user.official_retweet:
         status = status['retweeted_status']
-    msg_dict = {'content': status['text'], 'id': str(status['id'])}
+    msg_dict = {'content': unescape(status['text']), 'id': str(status['id'])}
     if 'user' in status:
         msg_dict['username'] = status['user']['screen_name']
         Db.set_cache(status)
