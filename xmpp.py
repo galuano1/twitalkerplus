@@ -722,7 +722,7 @@ class XMPP_handler(webapp.RequestHandler):
             if oauth_token is None:
                 twitter_user = TwitterUser.get_by_twitter_name(None, jid)
                 if twitter_user is None:
-                    return _('INVALID_PIN_CODE')
+                    return _('INVALID_PIN_CODE') % ''
                 oauth_token = twitter_user.access_token_key
             token = oauth.Token(oauth_token)
             token.set_verifier(args[0])
