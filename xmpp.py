@@ -37,25 +37,28 @@ class XMPP_handler(webapp.RequestHandler):
         _locale = self._google_user.locale
         if self._google_user.enabled_user:
             self._twitter_user = TwitterUser.get_by_twitter_name(self._google_user.enabled_user, self._google_user.jid)
-            self._api = twitter.Api(consumer_key=config.OAUTH_CONSUMER_KEY,
-                                    consumer_secret=config.OAUTH_CONSUMER_SECRET,
-                                    access_token_key=self._twitter_user.access_token_key,
-                                    access_token_secret=self._twitter_user.access_token_secret)
-            try:
-                self._user = self._api.verify_credentials()
-            except twitter.TwitterAuthenticationError:
-                self._google_user.retry += 1
-                if self._google_user.retry >= config.MAX_RETRY:
-                    GoogleUser.disable(self._google_user.jid)
-                    xmpp.send_message(self._google_user.jid, _('NO_AUTHENTICATION'))
-                else:
-                    Db.set_datastore(self._google_user)
-                return
-            if self._google_user.retry > 0:
-                self._google_user.retry = 0
-            if self._twitter_user.twitter_name != self._user['screen_name']:
-                self._twitter_user.twitter_name = self._user['screen_name']
-                self._google_user.enabled_user = self._user['screen_name']
+            if self._twitter_user is None:
+                self._google_user.enabled_user = ''
+            else:
+                self._api = twitter.Api(consumer_key=config.OAUTH_CONSUMER_KEY,
+                                        consumer_secret=config.OAUTH_CONSUMER_SECRET,
+                                        access_token_key=self._twitter_user.access_token_key,
+                                        access_token_secret=self._twitter_user.access_token_secret)
+                try:
+                    self._user = self._api.verify_credentials()
+                except twitter.TwitterAuthenticationError:
+                    self._google_user.retry += 1
+                    if self._google_user.retry >= config.MAX_RETRY:
+                        GoogleUser.disable(self._google_user.jid)
+                        xmpp.send_message(self._google_user.jid, _('NO_AUTHENTICATION'))
+                    else:
+                        Db.set_datastore(self._google_user)
+                    return
+                if self._google_user.retry > 0:
+                    self._google_user.retry = 0
+                if self._twitter_user.twitter_name != self._user['screen_name']:
+                    self._twitter_user.twitter_name = self._user['screen_name']
+                    self._google_user.enabled_user = self._user['screen_name']
         else:
             self._twitter_user = Dummy()
             self._api = Dummy()
