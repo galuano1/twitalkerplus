@@ -9,6 +9,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class cron_handler(webapp.RequestHandler):
     def get(self):
+        _ = gettext
         locales = self.request.accept_language.best_matches('en-us')
         for locale in locales:
             locale = locale.lower()
