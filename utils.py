@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import re
+import codecs
 
 from pytz.gae import pytz
 from string import Template
@@ -54,7 +55,7 @@ def parse_status(status):
         msg_dict['source'] = source.group(1) if source else status['source']
     else:
         msg_dict['source'] = ''
-    return Template(_user.msg_template).safe_substitute(msg_dict)
+    return Template(unicode(_user.msg_template)).safe_substitute(msg_dict)
 
 def parse_statuses(statuses, reverse=True, filter_self=False):
     if statuses:
