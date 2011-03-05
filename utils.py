@@ -49,7 +49,7 @@ def parse_status(status):
     utc_dt = utc.localize(t)
     tz = pytz.timezone(_user.timezone)
     t = tz.normalize(utc_dt.astimezone(tz))
-    msg_dict['time'] = t.strftime(_user.date_formate.encode('UTF-8'))
+    msg_dict['time'] = t.strftime(_user.date_format.encode('UTF-8')).decode('UTF-8')
     if 'source' in status:
         source = re.match(r'<a .*>(.*)</a>', status['source'])
         msg_dict['source'] = source.group(1) if source else status['source']

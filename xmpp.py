@@ -614,8 +614,8 @@ class XMPP_handler(webapp.RequestHandler):
 
     def func_datefmt(self, args):
         if len(args):
-            self._google_user.date_formate = ' '.join(args)
-        return _('DATE_TEMPLATE') % self._google_user.date_formate
+            self._google_user.date_format = ' '.join(args)
+        return _('DATE_TEMPLATE') % self._google_user.date_format
 
     def func_prefix(self, args):
         length = len(args)

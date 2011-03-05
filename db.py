@@ -26,7 +26,7 @@ class GoogleUser(db.Model):
     last_dm_id = db.IntegerProperty(default=0)
     bold_username = db.BooleanProperty(default=True)
     command_prefix = db.StringProperty(default='-')
-    date_formate = db.StringProperty(default=config.DEFAULT_TIME_FORMAT)
+    date_format = db.StringProperty(default=config.DEFAULT_TIME_FORMAT)
     locale = db.StringProperty(default=config.DEFAULT_LANGUAGE)
     timezone = db.StringProperty(default=config.DEFAULT_TIMEZONE)
     msg_template = db.StringProperty(default=config.DEFAULT_TEMPLATE, multiline=True)
