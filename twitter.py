@@ -4,22 +4,16 @@ import urllib
 import urllib2
 import oauth
 import urlparse
+import simplejson
 
 from db import *
-from django.utils import simplejson
 from email.utils import parsedate
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
 
 class TwitterError(Exception):
-    _message = ''
-    @property
-    def message(self):
-        return self._message
-
-    def __init__(self, *args):
-        if len(args) > 0:
-            self._message = args[0]
+    def __init__(self, message=None):
+      self.message = message
 
 class TwitterAuthenticationError(TwitterError):
     pass

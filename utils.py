@@ -1,13 +1,14 @@
 #!/usr/bin/python
 import re
-import codecs
 
 from pytz.gae import pytz
 from string import Template
 from datetime import datetime
-from db import *
+from db import IdList, Db, GoogleUser
 from email.utils import parsedate
 from xml.sax.saxutils import unescape
+from google.appengine.ext import db
+from constant import MAX_MENTION_ID_LIST_NUM, MAX_SHORT_ID_LIST_NUM
 
 _jid = None
 _user = None
@@ -71,6 +72,8 @@ def parse_statuses(statuses, reverse=True, filter_self=False):
 
 
 def generate_short_id(id, is_mention=False):
+    if not db.WRITE_CAPABILITY:
+      return None
     id = str(id)
     id_list = IdList.get_by_jid(_jid, _user.shard)
     if id in id_list.short_id_list:

@@ -2,11 +2,8 @@
 import config
 import counter
 import time
-import logging
-import traceback
 import sys
 
-from StringIO import StringIO
 from google.appengine.api import memcache
 from constant import *
 from google.appengine.ext import db
@@ -173,49 +170,40 @@ class IdList(db.Model):
 class Db:
     @staticmethod
     def set_cache(data):
-        def cache_set(key, value, namespace=None):
+        def cache_set(*args, **kwargs):
             for _ in xrange(config.MAX_RETRY):
-                if memcache.set(key, value, namespace=namespace):
+                if memcache.set(*args, **kwargs):
                     break
         if isinstance(data, GoogleUser):
-            return cache_set(data.jid, data, namespace='jid')
+            return cache_set(data.jid, data, time=180, namespace='jid')
         elif isinstance(data, TwitterUser):
             key_name = data.twitter_name if data.twitter_name is not None else ''
-            return cache_set(key_name, data, namespace='twitter_name')
+            return cache_set(key_name, data, time=180, namespace='twitter_name')
         elif isinstance(data, IdList):
             setattr(sys.modules[__name__], data.__class__.__name__, data.__class__)
-            return cache_set(data.key().name(), data, namespace='short_id_list')
+            return cache_set(data.key().name(), data, time=180, namespace='short_id_list')
         elif type(data) is dict and 'id_str' in data:
-            return cache_set(data['id_str'], data, namespace='status')
+            return cache_set(data['id_str'], data, time=86400, namespace='status')
         return False
 
     @staticmethod
     def set_datastore(data):
         def datastore_set(model):
-            err = StringIO('')
-            for i in xrange(config.MAX_RETRY):
+            while db.WRITE_CAPABILITY:
                 try:
-                    data.put()
-                except BaseException:
-                    traceback.print_exc(file=err)
-                    time.sleep(1)
-                    continue
-                else:
-                    return
-            err = err.getvalue()
-            if err:
-                logging.error(err)
-        try:
-            for _ in xrange(config.MAX_RETRY):
-                try:
-                    if data.is_saved():
-                        Db.set_cache(data)
-                        db.run_in_transaction(datastore_set, data)
-                    else:
-                        db.run_in_transaction(datastore_set, data)
-                        Db.set_cache(data)
-                    break
-                except db.Timeout:
+                  data.put()
+                except db.Error:
                     pass
+                else:
+                    break
+        try:
+            if data.is_saved():
+                Db.set_cache(data)
+                db.run_in_transaction(datastore_set, data)
+            else:
+                db.run_in_transaction(datastore_set, data)
+                Db.set_cache(data)
+        except db.Timeout:
+            pass
         except DeadlineExceededError:
             pass

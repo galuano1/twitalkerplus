@@ -1,19 +1,25 @@
 #!/usr/bin/python
 import twitter
 import utils
+import StringIO
+import logging
+import traceback
+import config
 
-from db import *
+from db import Db, GoogleUser, TwitterUser, IdList, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
 from mylocale import gettext
 from time import time
 from google.appengine.ext import webapp
 from google.appengine.api import xmpp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.ext import db
 
 class worker_handler(webapp.RequestHandler):
     def get(self):
         return
 
     def post(self):
+      if db.WRITE_CAPABILITY:
         jids = self.request.get_all('jid')
         for jid in jids:
             google_user = GoogleUser.get_by_jid(jid)

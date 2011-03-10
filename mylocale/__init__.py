@@ -1,8 +1,6 @@
 #!/usr/bin/python
 import config
 
-from google.appengine.api import memcache
-
 def gettext(message, locale=config.DEFAULT_LANGUAGE):
     if locale not in globals():
         __import__('mylocale.' + locale)

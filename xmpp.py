@@ -3,6 +3,7 @@ import twitter
 import utils
 import oauth
 import cgi
+import logging
 
 from string import Template
 from db import *
