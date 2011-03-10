@@ -10,6 +10,7 @@ use -help to get full help informations.
 
 Deployment:
 If you want deploy your own server, just modify application in app.yaml and appcfg.py update, that's enough!
+Twitter App is a client, so it has no callback url at all.
 
 Credits:
 Thank you 
