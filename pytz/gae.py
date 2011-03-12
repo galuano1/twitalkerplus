@@ -37,43 +37,43 @@ zoneinfo_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
 
 
 def get_zoneinfo():
-    """Cache the opened zipfile in the module."""
-    global zoneinfo
-    if zoneinfo is None:
-        zoneinfo = zipfile.ZipFile(zoneinfo_path)
+  """Cache the opened zipfile in the module."""
+  global zoneinfo
+  if zoneinfo is None:
+    zoneinfo = zipfile.ZipFile(zoneinfo_path)
 
-    return zoneinfo
+  return zoneinfo
 
 
 class TimezoneLoader(object):
-    """A loader that that reads timezones using ZipFile."""
+  """A loader that that reads timezones using ZipFile."""
 
-    def __init__(self):
-        self.available = {}
+  def __init__(self):
+    self.available = {}
 
-    def open_resource(self, name):
-        """Opens a resource from the zoneinfo subdir for reading."""
-        name_parts = name.lstrip('/').split('/')
-        if os.path.pardir in name_parts:
-            raise ValueError('Bad path segment: %r' % os.path.pardir)
+  def open_resource(self, name):
+    """Opens a resource from the zoneinfo subdir for reading."""
+    name_parts = name.lstrip('/').split('/')
+    if os.path.pardir in name_parts:
+      raise ValueError('Bad path segment: %r' % os.path.pardir)
 
-        cache_key = 'pytz.zoneinfo.%s.%s' % (pytz.OLSON_VERSION, name)
-        zonedata = memcache.get(cache_key)
-        if zonedata is None:
-            zonedata = get_zoneinfo().read('zoneinfo/' + '/'.join(name_parts))
-            memcache.add(cache_key, zonedata)
-        return StringIO(zonedata)
+    cache_key = 'pytz.zoneinfo.%s.%s' % (pytz.OLSON_VERSION, name)
+    zonedata = memcache.get(cache_key)
+    if zonedata is None:
+      zonedata = get_zoneinfo().read('zoneinfo/' + '/'.join(name_parts))
+      memcache.add(cache_key, zonedata)
+    return StringIO(zonedata)
 
-    def resource_exists(self, name):
-        """Return true if the given resource exists"""
-        if name not in self.available:
-            try:
-                get_zoneinfo().getinfo('zoneinfo/' + name)
-                self.available[name] = True
-            except KeyError:
-                self.available[name] = False
+  def resource_exists(self, name):
+    """Return true if the given resource exists"""
+    if name not in self.available:
+      try:
+        get_zoneinfo().getinfo('zoneinfo/' + name)
+        self.available[name] = True
+      except KeyError:
+        self.available[name] = False
 
-        return self.available[name]
+    return self.available[name]
 
 
 pytz.loader = TimezoneLoader()

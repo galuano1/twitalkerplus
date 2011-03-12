@@ -8,25 +8,25 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 class cron_handler(webapp.RequestHandler):
-    def get(self):
-        _ = gettext
-        locales = self.request.accept_language.best_matches('en-us')
-        for locale in locales:
-            locale = locale.lower()
-            if locale in LOCALES:
-                _ = functools.partial(gettext, locale=locale)
-                break
-        self.response.out.write(_('WEB') % os.environ['APPLICATION_ID'])
+  def get(self):
+    _ = gettext
+    locales = self.request.accept_language.best_matches('en-us')
+    for locale in locales:
+      locale = locale.lower()
+      if locale in LOCALES:
+        _ = functools.partial(gettext, locale=locale)
+        break
+    self.response.out.write(_('WEB') % os.environ['APPLICATION_ID'])
 
-    def head(self):
-        return
+  def head(self):
+    return
 
-    def post(self):
-        return
+  def post(self):
+    return
 
 def main():
-    application = webapp.WSGIApplication([('/', cron_handler)])
-    run_wsgi_app(application)
+  application = webapp.WSGIApplication([('/', cron_handler)])
+  run_wsgi_app(application)
 
 if __name__ == "__main__":
-    main()
+  main()

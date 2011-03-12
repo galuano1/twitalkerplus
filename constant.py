@@ -31,23 +31,23 @@ USERS_NUM_IN_TASK = 8
 LOCALES = {'en-us': 'English(United States)', 'zh-cn': u'简体中文(中国)'}
 
 SHORT_COMMANDS = {
-    '@': 'reply',
-    'r': 'reply',
-    'd': 'dm',
-    'ho': 'home',
-    'lt': 'list',
-    'tl': 'timeline',
-    's': 'switch',
-    'fo': 'follow',
-    'unfo': 'unfollow',
-    'b': 'block',
-    'ub': 'unblock',
-    'm': 'msg',
-    'f': 'fav',
-    'uf': 'unfav',
-    'u': 'user',
-    '?': 'help',
-    'h': 'help'
+  '@': 'reply',
+  'r': 'reply',
+  'd': 'dm',
+  'ho': 'home',
+  'lt': 'list',
+  'tl': 'timeline',
+  's': 'switch',
+  'fo': 'follow',
+  'unfo': 'unfollow',
+  'b': 'block',
+  'ub': 'unblock',
+  'm': 'msg',
+  'f': 'fav',
+  'uf': 'unfav',
+  'u': 'user',
+  '?': 'help',
+  'h': 'help'
 }
 
 MODE_DM = 8
