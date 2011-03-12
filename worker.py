@@ -22,9 +22,15 @@ class worker_handler(webapp.RequestHandler):
     if db.WRITE_CAPABILITY:
       jids = self.request.get_all('jid')
       for jid in jids:
-        google_user = GoogleUser.get_by_jid(jid)
+        try:
+          google_user = GoogleUser.get_by_jid(jid)
+        except db.Error:
+          continue
         _ = lambda x: gettext(x, locale=google_user.locale)
-        twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
+        try:
+          twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
+        except db.Error:
+          continue
         if twitter_user is None:
           google_user.enabled_user = ''
           Db.set_datastore(google_user)
@@ -163,8 +169,8 @@ class worker_handler(webapp.RequestHandler):
             traceback.print_exc(file=err)
             logging.error(google_user.jid + ' DM:\n' + err.getvalue())
 
-        if msg_list:
-          xmpp.send_message(google_user.jid, '=================================================\n'.join(msg_list))
+        for msg in msg_list:
+          xmpp.send_message(google_user.jid, msg)
         google_user.last_update = int(time())
         Db.set_datastore(google_user)
 
