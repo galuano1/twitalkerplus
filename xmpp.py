@@ -38,6 +38,7 @@ class XMPP_handler(webapp.RequestHandler):
     _locale = self._google_user.locale
     if self._google_user.enabled_user:
       self._twitter_user = TwitterUser.get_by_twitter_name(self._google_user.enabled_user, self._google_user.jid)
+      self._api = Dummy()
       if self._twitter_user is None:
         self._google_user.enabled_user = ''
       else:
