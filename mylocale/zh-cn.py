@@ -93,8 +93,8 @@ str_list = {
     -lt/-list：查看列表中的推
     -s/-switch：切换用户
     设置类:
-    -on：开启元件更新
-    -off：关闭元件更新
+    -on：查看或开启元件更新
+    -off：查看或关闭元件更新
     -live：指定列表更新的列表
     -time：指定更新间隔
     -msgtpl：指定推模板
@@ -110,6 +110,7 @@ str_list = {
     -remove：解除关联
     帮助:
     -?/-h/-help：显示本帮助
+    如果在使用中发现有BUG，请及时联系我@gh05tw01f 谢谢～
     """,
   'HELP_OAUTH': u'用法： -oauth [用户名 密码]\n获取用于OAuth的链接。如果你提供用户名和密码，可以免去上Twitter网站认证的过程。',
   'HELP_BIND': u'用法： -bind PIN码\n提供PIN码用以完成OAuth认证。PIN码可以通过访问用-oauth命令获取到的链接后获得。',

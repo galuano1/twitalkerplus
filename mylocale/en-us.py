@@ -93,8 +93,8 @@ str_list = {
     -b/-block: block user
     -ub/-unblock: unblock user
     Settings:
-    -on: turn on updates
-    -off: turn off updates
+    -on: view or turn on updates
+    -off: view or turn off updates
     -live: specify list of live
     -s/-switch: switch among users
     -time: change time interval
@@ -111,6 +111,7 @@ str_list = {
     -remove: remove twitter user
     Help:
     -?/-h/-help: show this help
+    If you find some bug, please contact me @gh05tw01f, thx~
     """,
   'HELP_OAUTH': 'USAGE: -oauth [username password[\nGet OAuth authorization url to grant PIN code. If you supply username and password, it can help you bypass oauth.'
   ,
