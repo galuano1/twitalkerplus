@@ -8,7 +8,7 @@ from db import IdList, Db, GoogleUser
 from email.utils import parsedate
 from xml.sax.saxutils import unescape
 from google.appengine.ext import db
-from constant import MAX_MENTION_ID_LIST_NUM, MAX_SHORT_ID_LIST_NUM
+from config import MAX_SHORT_ID_LIST_NUM
 
 _jid = None
 _user = None
@@ -38,11 +38,8 @@ def parse_status(status):
   if username_at in msg_dict['content']:
     if _user.bold_username:
       msg_dict['content'] = msg_dict['content'].replace(username_at, '*%s*' % username_at)
-    if 'user' in status:
-      short_id = generate_short_id(status['id'], True)
-  else:
-    if 'user' in status:
-      short_id = generate_short_id(status['id'], False)
+  if 'user' in status:
+    short_id = generate_short_id(status['id'])
   msg_dict['shortid'] = '#' + str(short_id) if short_id is not None else ''
   utc = pytz.utc
   t = parsedate(status['created_at'])[:6]
@@ -71,7 +68,7 @@ def parse_statuses(statuses, reverse=True, filter_self=False):
   return ''
 
 
-def generate_short_id(id, is_mention=False):
+def generate_short_id(id):
   if not db.WRITE_CAPABILITY:
     return None
   id = str(id)
@@ -79,25 +76,14 @@ def generate_short_id(id, is_mention=False):
   if id in id_list.short_id_list:
     return id_list.short_id_list.index(id)
   else:
-    if is_mention:
-      short_id_list_pointer = id_list.mention_list_pointer
-    else:
-      short_id_list_pointer = id_list.timeline_list_pointer
-    if is_mention:
-      short_id_list_pointer %= MAX_MENTION_ID_LIST_NUM
-    else:
-      short_id_list_pointer = (short_id_list_pointer % MAX_SHORT_ID_LIST_NUM) + MAX_MENTION_ID_LIST_NUM
-    id_list.short_id_list[short_id_list_pointer] = id
-    short_id_list_pointer += 1
-    if is_mention:
-      id_list.mention_list_pointer = short_id_list_pointer % MAX_MENTION_ID_LIST_NUM
-    else:
-      id_list.timeline_list_pointer = (short_id_list_pointer - MAX_MENTION_ID_LIST_NUM) % MAX_SHORT_ID_LIST_NUM
+    id_list.list_pointer += 1
+    id_list.list_pointer %= MAX_SHORT_ID_LIST_NUM
+    id_list.short_id_list[id_list.list_pointer] = id
     IdList.set(_jid, id_list)
-    return short_id_list_pointer - 1
+    return id_list.list_pointer
 
 def restore_short_id(short_id, jid):
-  if short_id < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+  if short_id < MAX_SHORT_ID_LIST_NUM:
     id_list = IdList.get_by_jid(jid, _user.shard)
     id = id_list.short_id_list[short_id]
     if id:

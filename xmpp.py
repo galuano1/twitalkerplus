@@ -4,14 +4,15 @@ import utils
 import oauth
 import cgi
 import logging
+import config
 
 from string import Template
-from db import *
+from db import TwitterUser, GoogleUser, Db, IdList
 from constant import *
 from pytz.gae import pytz
 from mylocale import gettext
 from google.appengine.ext import webapp
-from google.appengine.api import xmpp
+from google.appengine.api import xmpp, memcache
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 _locale = config.DEFAULT_LANGUAGE
@@ -56,11 +57,16 @@ class XMPP_handler(webapp.RequestHandler):
           else:
             Db.set_datastore(self._google_user)
           return
-        if self._google_user.retry > 0:
-          self._google_user.retry = 0
-        if self._twitter_user.twitter_name != self._user['screen_name']:
-          self._twitter_user.twitter_name = self._user['screen_name']
-          self._google_user.enabled_user = self._user['screen_name']
+        else:
+          if self._google_user.retry > 0:
+            self._google_user.retry = 0
+          try:
+            if self._twitter_user.twitter_name != self._user['screen_name']:
+              self._twitter_user.twitter_name = self._user['screen_name']
+              self._google_user.enabled_user = self._user['screen_name']
+          except TypeError:
+            logging.error('%s: %s' % (jid, unicode(self._user)))
+            return
     else:
       self._twitter_user = Dummy()
       self._api = Dummy()
@@ -112,7 +118,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -149,7 +155,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -269,7 +275,7 @@ class XMPP_handler(webapp.RequestHandler):
       elif args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -362,7 +368,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -382,7 +388,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -459,7 +465,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -493,7 +499,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:
@@ -514,7 +520,7 @@ class XMPP_handler(webapp.RequestHandler):
       if args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
-      elif int(args[0]) < MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM:
+      elif int(args[0]) < config.MAX_SHORT_ID_LIST_NUM:
         short_id = int(args[0])
         id = utils.restore_short_id(short_id, self._google_user.jid)
       else:

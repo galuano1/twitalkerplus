@@ -16,10 +16,6 @@ SIGNIN_URL = 'https://api.twitter.com/oauth/authenticate'
 
 BASE_URL = 'https://api.twitter.com/1'
 
-MAX_SHORT_ID_LIST_NUM = 100
-
-MAX_MENTION_ID_LIST_NUM = 100
-
 MAX_REPLY_STATUS = 4
 
 CRON_NUM = 10

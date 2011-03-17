@@ -124,12 +124,11 @@ class TwitterUser(db.Model):
 class IdList(db.Model):
   short_id_list = list()
   short_id_list_str = db.TextProperty(default='')
-  timeline_list_pointer = db.IntegerProperty(default=0)
-  mention_list_pointer = db.IntegerProperty(default=0)
+  list_pointer = db.IntegerProperty(default=0)
 
   @staticmethod
   def add(jid, shard):
-    data = ','.join('0' for _ in xrange(MAX_SHORT_ID_LIST_NUM + MAX_MENTION_ID_LIST_NUM))
+    data = ','.join('0' for _ in xrange(config.MAX_SHORT_ID_LIST_NUM))
     cls = type('IdList%d' % shard, (IdList,), {})
     short_id_list = cls(key_name=jid, short_id_list_str=data)
     Db.set_datastore(short_id_list)

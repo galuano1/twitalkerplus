@@ -14,3 +14,5 @@ DEFAULT_TIMEZONE = 'Asia/Shanghai'
 DEFAULT_TEMPLATE = '$username: $content\n[$id$shortid] $time <- $source\n'
 
 DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+MAX_SHORT_ID_LIST_NUM = 200
