@@ -61,13 +61,12 @@ class worker_handler(webapp.RequestHandler):
           google_user.enabled_user = self._user['screen_name']
           Db.set_cache(google_user)
         utils.set_jid(google_user.jid)
-        last_msg_id = google_user.last_msg_id
-        msg_list = []
         home_statuses = []
         home_mention_statuses = []
+        all_statuses = []
 
         if google_user.display_timeline & MODE_HOME:
-          home_rpc = api.get_home_timeline(since_id=last_msg_id, async=True)
+          home_rpc = api.get_home_timeline(since_id=google_user.last_msg_id, async=True)
         else:
           home_rpc = api.get_home_timeline(since_id=google_user.last_mention_id, async=True)
         if google_user.display_timeline & MODE_LIST:
@@ -86,12 +85,10 @@ class worker_handler(webapp.RequestHandler):
         if google_user.display_timeline & MODE_HOME:
           try:
             home_statuses = api._process_result(home_rpc)
-            content = utils.parse_statuses(home_statuses, filter_self=True)
-            if content.strip():
-              msg_list.append(_('TIMELINE') + '\n\n' + content)
-              IdList.flush(google_user.jid)
-              if home_statuses[-1]['id'] > last_msg_id:
-                google_user.last_msg_id = home_statuses[-1]['id']
+            if home_statuses:
+              all_statuses.extend(home_statuses)
+              if home_statuses[0]['id'] > google_user.last_msg_id:
+                google_user.last_msg_id = home_statuses[0]['id']
           except twitter.TwitterInternalServerError:
             pass
           except BaseException:
@@ -101,12 +98,10 @@ class worker_handler(webapp.RequestHandler):
         if google_user.display_timeline & MODE_LIST:
           try:
             statuses = api._process_result(list_rpc)
-            content = utils.parse_statuses(statuses, filter_self=True)
-            if content.strip():
-              msg_list.append(_('LIST') % (google_user.list_user + '/' + google_user.list_name) + '\n\n' + content)
-              IdList.flush(google_user.jid)
-              if statuses[-1]['id'] > google_user.last_list_id:
-                google_user.last_list_id = statuses[-1]['id']
+            if statuses:
+              all_statuses.extend(statuses)
+              if statuses[0]['id'] > google_user.last_list_id:
+                google_user.last_list_id = statuses[0]['id']
           except twitter.TwitterInternalServerError:
             pass
           except BaseException, e:
@@ -117,6 +112,7 @@ class worker_handler(webapp.RequestHandler):
         if google_user.display_timeline & MODE_MENTION:
           try:
             statuses = api._process_result(mention_rpc)
+            all_statuses.extend(statuses)
             if not google_user.display_timeline & MODE_HOME:
               try:
                 home_statuses = api._process_result(home_rpc)
@@ -131,35 +127,35 @@ class worker_handler(webapp.RequestHandler):
                 google_user.last_mention_id = home_statuses[0]['id']
               at_username = '@' + google_user.enabled_user
               home_mention_statuses = [x for x in home_statuses if at_username in x['text']]
-            del home_statuses
             if home_mention_statuses:
-              statuses += home_mention_statuses
-              statuses.sort(cmp=lambda x, y: cmp(x['id'], y['id']), reverse=True)
-              last = statuses[-1]['id']
-              for i in range(len(statuses) - 2, -1, -1):
-                if last == statuses[i]['id']:
-                  del statuses[i]
-                else:
-                  last = statuses[i]['id']
-            content = utils.parse_statuses(statuses, filter_self=True)
-            if content.strip():
-              msg_list.append(_('MENTIONS') + '\n\n' + content)
-              IdList.flush(google_user.jid)
-              if statuses[-1]['id'] > google_user.last_mention_id:
-                google_user.last_mention_id = statuses[-1]['id']
+              all_statuses.extend(home_mention_statuses)
+              if statuses[0]['id'] > google_user.last_mention_id:
+                google_user.last_mention_id = home_statuses[0]['id']
           except twitter.TwitterInternalServerError:
             pass
           except BaseException:
             err = StringIO('')
             traceback.print_exc(file=err)
             logging.error(google_user.jid + ' Mention:\n' + err.getvalue())
+        if all_statuses:
+          all_statuses.sort(cmp=lambda x, y: cmp(x['id'], y['id']))
+          last = all_statuses[-1]['id']
+          for i in range(len(all_statuses) - 2, -1, -1):
+            if last == all_statuses[i]['id']:
+              del all_statuses[i]
+            else:
+              last = all_statuses[i]['id']
+          content = utils.parse_statuses(all_statuses, filter_self=True, reverse=False)
+          if content.strip():
+            IdList.flush(google_user.jid)
+            xmpp.send_message(google_user.jid, content)
         if google_user.display_timeline & MODE_DM:
           try:
             statuses = api._process_result(dm_rpc)
             content = utils.parse_statuses(statuses)
             if content.strip():
-              msg_list.append(_('DIRECT_MESSAGES') + '\n\n' + content)
               IdList.flush(google_user.jid)
+              xmpp.send_message(google_user.jid, _('DIRECT_MESSAGES') + '\n\n' + content)
               if statuses[-1]['id'] > google_user.last_dm_id:
                 google_user.last_dm_id = statuses[-1]['id']
           except twitter.TwitterInternalServerError:
@@ -168,9 +164,6 @@ class worker_handler(webapp.RequestHandler):
             err = StringIO('')
             traceback.print_exc(file=err)
             logging.error(google_user.jid + ' DM:\n' + err.getvalue())
-
-        for msg in msg_list:
-          xmpp.send_message(google_user.jid, msg)
         google_user.last_update = int(time())
         Db.set_datastore(google_user)
 
