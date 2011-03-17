@@ -129,8 +129,10 @@ class worker_handler(webapp.RequestHandler):
               home_mention_statuses = [x for x in home_statuses if at_username in x['text']]
             if home_mention_statuses:
               all_statuses.extend(home_mention_statuses)
-              if statuses[0]['id'] > google_user.last_mention_id:
-                google_user.last_mention_id = home_statuses[0]['id']
+            if home_statuses and home_statuses[0]['id'] > google_user.last_mention_id:
+              google_user.last_mention_id = home_statuses[0]['id']
+            if statuses and statuses[0]['id'] > google_user.last_mention_id:
+              google_user.last_mention_id = statuses[0]['id']
           except twitter.TwitterInternalServerError:
             pass
           except BaseException:
