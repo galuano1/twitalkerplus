@@ -23,9 +23,19 @@ class cron_handler(webapp.RequestHandler):
   def post(self):
     return
 
+class wave_handler(webapp.RequestHandler):
+  def get(self, *args):
+    return
+
+  def head(self, *args):
+    return
+
+  def post(self, *args):
+    return
 
 def main():
-  application = webapp.WSGIApplication([('/', cron_handler)])
+  application = webapp.WSGIApplication([('/', cron_handler),
+                                        ('/_wave/robot/profile', wave_handler)])
   run_wsgi_app(application)
 
 if __name__ == "__main__":

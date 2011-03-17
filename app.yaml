@@ -10,6 +10,9 @@ handlers:
 - url: /
   script: web.py
 
+- url: /_wave/robot/profile
+  script: web.py
+
 - url: /favicon.ico
   static_files: favicon.ico
   upload: favicon.ico
