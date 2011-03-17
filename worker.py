@@ -174,6 +174,7 @@ class worker_handler(webapp.RequestHandler):
         google_user.last_update = int(time())
         Db.set_datastore(google_user)
 
+
 def main():
   application = webapp.WSGIApplication([('/worker', worker_handler)])
   run_wsgi_app(application)

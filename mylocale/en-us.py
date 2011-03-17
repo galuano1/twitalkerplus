@@ -168,4 +168,4 @@ str_list = {
   ,
   'HELP_PREFIX': 'USAGE: -prefix [PREFIX]\nChange command prefix. Default is a hyphen.\nCAUTIONS: CHANGE THIS SETTING AFTER YOU KNOW WHAT YOU ARE DOING, IT MAY BREAK EVERYTHING AND CANT BE RESTORED.\nIf no prefix is given, display current instead.'
   ,
-}
+  }

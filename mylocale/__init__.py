@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import config
 
+LOCALES = {'en-us': 'English(United States)', 'zh-cn': u'简体中文(中国)'}
+
 def gettext(message, locale=config.DEFAULT_LANGUAGE):
   if locale not in globals():
     __import__('mylocale.' + locale)

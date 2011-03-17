@@ -57,6 +57,7 @@ class MemcachedCount(object):
     elif incr < 0:
       memcache.decr(self.key, -incr)
 
+
 class Counter(object):
   """A counter using sharded writes to prevent contentions.
 

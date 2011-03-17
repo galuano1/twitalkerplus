@@ -261,7 +261,7 @@ class DstTzInfo(BaseTzInfo):
     for delta in [timedelta(days=-1), timedelta(days=1)]:
       loc_dt = dt + delta
       idx = max(0, bisect_right(
-          self._utc_transition_times, loc_dt) - 1)
+        self._utc_transition_times, loc_dt) - 1)
       inf = self._transition_info[idx]
       tzinfo = self._tzinfos[inf]
       loc_dt = tzinfo.normalize(dt.replace(tzinfo=tzinfo))
@@ -284,13 +284,13 @@ class DstTzInfo(BaseTzInfo):
       # hours.
       elif is_dst:
         return self.localize(
-            dt + timedelta(hours=6), is_dst=True) - timedelta(hours=6)
+          dt + timedelta(hours=6), is_dst=True) - timedelta(hours=6)
 
       # If we are forcing the post-DST side of the DST transition, we
       # obtain the correct timezone by winding the clock back.
       else:
         return self.localize(
-            dt - timedelta(hours=6), is_dst=False) + timedelta(hours=6)
+          dt - timedelta(hours=6), is_dst=False) + timedelta(hours=6)
 
 
     # If we get this far, we have multiple possible timezones - this
@@ -325,9 +325,9 @@ class DstTzInfo(BaseTzInfo):
     # Choose the earliest (by UTC) applicable timezone.
     def mycmp(a, b):
       return cmp(
-          a.replace(tzinfo=None) - a.tzinfo._utcoffset,
-          b.replace(tzinfo=None) - b.tzinfo._utcoffset,
-          )
+        a.replace(tzinfo=None) - a.tzinfo._utcoffset,
+        b.replace(tzinfo=None) - b.tzinfo._utcoffset,
+        )
 
     filtered_possible_loc_dt.sort(mycmp)
     return filtered_possible_loc_dt[0]

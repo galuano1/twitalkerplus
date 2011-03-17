@@ -50,6 +50,7 @@ class Error(RuntimeError):
   def __str__(self):
     return self._message
 
+
 def build_xoauth_string(url, consumer, token=None):
   """Build an XOAUTH string for use in SMTP/IMPA authentication."""
   request = Request.from_consumer_and_token(consumer, token, "GET", url)
@@ -74,13 +75,16 @@ def generate_timestamp():
   """Get seconds since epoch (UTC)."""
   return int(time.time())
 
+
 def generate_nonce(length=8):
   """Generate pseudorandom number."""
   return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
+
 def generate_verifier(length=8):
   """Generate pseudorandom number."""
   return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+
 
 class Consumer(object):
   """A consumer of OAuth-protected services.
@@ -174,7 +178,7 @@ class Token(object):
     data = {
       'oauth_token': self.key,
       'oauth_token_secret': self.secret,
-    }
+      }
 
     if self.callback_confirmed is not None:
       data['oauth_callback_confirmed'] = self.callback_confirmed
@@ -342,7 +346,7 @@ class Request(dict):
 
     url_items = self._split_url_string(query).items()
     non_oauth_url_items = list(
-        [(k, v) for k, v in url_items  if not k.startswith('oauth_')])
+      [(k, v) for k, v in url_items  if not k.startswith('oauth_')])
     items.extend(non_oauth_url_items)
 
     encoded_str = urllib.urlencode(sorted(items))
@@ -419,7 +423,7 @@ class Request(dict):
       'oauth_timestamp': cls.make_timestamp(),
       'oauth_nonce': cls.make_nonce(),
       'oauth_version': cls.version,
-    }
+      }
 
     defaults.update(parameters)
     parameters = defaults
@@ -510,6 +514,7 @@ class Client():
       return ''
     else:
       return result.content
+
 
 class SignatureMethod(object):
   """A way of signing requests.

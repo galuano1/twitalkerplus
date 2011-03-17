@@ -7,13 +7,32 @@ import logging
 import config
 
 from string import Template
-from db import TwitterUser, GoogleUser, Db, IdList
-from constant import *
+from db import TwitterUser, GoogleUser, Db, IdList, MODE_LIST, MODE_MENTION, MODE_DM, MODE_HOME
 from pytz.gae import pytz
-from mylocale import gettext
+from mylocale import gettext, LOCALES
 from google.appengine.ext import webapp
 from google.appengine.api import xmpp, memcache
 from google.appengine.ext.webapp.util import run_wsgi_app
+
+SHORT_COMMANDS = {
+  '@': 'reply',
+  'r': 'reply',
+  'd': 'dm',
+  'ho': 'home',
+  'lt': 'list',
+  'tl': 'timeline',
+  's': 'switch',
+  'fo': 'follow',
+  'unfo': 'unfollow',
+  'b': 'block',
+  'ub': 'unblock',
+  'm': 'msg',
+  'f': 'fav',
+  'uf': 'unfav',
+  'u': 'user',
+  '?': 'help',
+  'h': 'help'
+}
 
 _locale = config.DEFAULT_LANGUAGE
 _ = lambda x: gettext(x, locale=_locale)
@@ -24,6 +43,7 @@ class Dummy(object):
 
   def __getitem__(self, item):
     raise NotImplementedError(item)
+
 
 class XMPP_handler(webapp.RequestHandler):
   def post(self):
@@ -103,8 +123,8 @@ class XMPP_handler(webapp.RequestHandler):
         return ''
       if not len(content):
         return ''
-      if len(content) > CHARACTER_LIMIT:
-        return _('WORDS_COUNT_EXCEED') % (len(content), CHARACTER_LIMIT)
+      if len(content) > twitter.CHARACTER_LIMIT:
+        return _('WORDS_COUNT_EXCEED') % (len(content), twitter.CHARACTER_LIMIT)
       try:
         self._api.post_update(content)
       except twitter.TwitterError, e:
@@ -126,7 +146,7 @@ class XMPP_handler(webapp.RequestHandler):
         id = long(args[0])
       id_str = '#' + str(short_id) if short_id else str(id)
       statuses = list()
-      for __ in xrange(MAX_REPLY_STATUS):
+      for __ in xrange(config.MAX_REPLY_STATUS):
         try:
           status = self._api.get_status(id)
         except twitter.TwitterError, e:
@@ -168,8 +188,8 @@ class XMPP_handler(webapp.RequestHandler):
         if 'No status found' in e.message:
           return _('STATUS_NOT_FOUND') % id_str
       message = u'@%s %s' % (status['user']['screen_name'], ' '.join(args[1:]))
-      if len(message) > CHARACTER_LIMIT:
-        return _('WORDS_COUNT_EXCEED') % (len(message), CHARACTER_LIMIT)
+      if len(message) > twitter.CHARACTER_LIMIT:
+        return _('WORDS_COUNT_EXCEED') % (len(message), twitter.CHARACTER_LIMIT)
       try:
         self._api.post_update(message, id)
       except twitter.TwitterError, e:
@@ -195,8 +215,8 @@ class XMPP_handler(webapp.RequestHandler):
       return _('DIRECT_MESSAGES') + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
     elif length > 1 and ' '.join(args[1:]):
       message = ' '.join(args[1:])
-      if len(message) > CHARACTER_LIMIT:
-        return _('WORDS_COUNT_EXCEED') % (len(message), CHARACTER_LIMIT)
+      if len(message) > twitter.CHARACTER_LIMIT:
+        return _('WORDS_COUNT_EXCEED') % (len(message), twitter.CHARACTER_LIMIT)
       try:
         self._api.post_direct_message(args[0], message)
       except twitter.TwitterError, e:
@@ -484,8 +504,8 @@ class XMPP_handler(webapp.RequestHandler):
           if name != self._user['screen_name'] and name not in mention_users:
             mention_users.append(name)
       message = u'%s %s' % (' '.join(['@' + x for x in mention_users]), ' '.join(args[1:]))
-      if len(message) > CHARACTER_LIMIT:
-        return _('WORDS_COUNT_EXCEED') % (len(message), CHARACTER_LIMIT)
+      if len(message) > twitter.CHARACTER_LIMIT:
+        return _('WORDS_COUNT_EXCEED') % (len(message), twitter.CHARACTER_LIMIT)
       try:
         self._api.post_update(message, id)
       except twitter.TwitterError, e:
@@ -542,7 +562,7 @@ class XMPP_handler(webapp.RequestHandler):
       if user_msg and user_msg[-1].isalnum():
         user_msg += ' '
       message = u'%sRT @%s:%s' % (user_msg, status['user']['screen_name'], status['text'])
-      if len(message) > CHARACTER_LIMIT:
+      if len(message) > twitter.CHARACTER_LIMIT:
         message = message[:138] + '..'
       try:
         json = self._api.post_update(message, id)
@@ -708,12 +728,12 @@ class XMPP_handler(webapp.RequestHandler):
     if not length or length == 2:
       consumer = oauth.Consumer(config.OAUTH_CONSUMER_KEY, config.OAUTH_CONSUMER_SECRET)
       client = oauth.Client(consumer)
-      resp = client.request(REQUEST_TOKEN_URL, "GET")
+      resp = client.request(twitter.REQUEST_TOKEN_URL, "GET")
       if not resp:
         return _('NETWORK_ERROR')
       self._request_token = dict(cgi.parse_qsl(resp))
       oauth_token = self._request_token['oauth_token']
-      redirect_url = "%s?oauth_token=%s" % (AUTHORIZATION_URL, oauth_token)
+      redirect_url = "%s?oauth_token=%s" % (twitter.AUTHORIZATION_URL, oauth_token)
       if not length:
         TwitterUser.add(self._google_user.jid, oauth_token)
         return _('OAUTH_URL') % redirect_url
@@ -740,7 +760,7 @@ class XMPP_handler(webapp.RequestHandler):
       token.set_verifier(args[0])
       consumer = oauth.Consumer(config.OAUTH_CONSUMER_KEY, config.OAUTH_CONSUMER_SECRET)
       client = oauth.Client(consumer, token)
-      resp = client.request(ACCESS_TOKEN_URL, "POST")
+      resp = client.request(twitter.ACCESS_TOKEN_URL, "POST")
       if not resp:
         return _('NETWORK_ERROR')
       access_token = dict(cgi.parse_qsl(resp))
@@ -774,6 +794,7 @@ class XMPP_handler(webapp.RequestHandler):
         return _('HELP_' + command.upper())
       else:
         return ''
+
 
 def main():
   application = webapp.WSGIApplication([('/_ah/xmpp/message/chat/', XMPP_handler)])

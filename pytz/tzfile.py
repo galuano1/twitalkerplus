@@ -21,7 +21,7 @@ def build_tzinfo(zone, fp):
 
   # Read out the transition times, localtime indices and ttinfo structures.
   data_fmt = '>%(timecnt)dl %(timecnt)dB %(ttinfo)s %(charcnt)ds' % dict(
-      timecnt=timecnt, ttinfo='lBB' * typecnt, charcnt=charcnt)
+    timecnt=timecnt, ttinfo='lBB' * typecnt, charcnt=charcnt)
   data_size = calcsize(data_fmt)
   data = unpack(data_fmt, fp.read(data_size))
 
@@ -54,9 +54,9 @@ def build_tzinfo(zone, fp):
   # Now build the timezone object
   if not len(transitions):
     cls = type(zone, (StaticTzInfo,), dict(
-        zone=zone,
-        _utcoffset=memorized_timedelta(ttinfo[0][0]),
-        _tzname=ttinfo[0][2]))
+      zone=zone,
+      _utcoffset=memorized_timedelta(ttinfo[0][0]),
+      _tzname=ttinfo[0][2]))
   else:
     # Early dates use the first standard time ttinfo
     i = 0
@@ -102,9 +102,9 @@ def build_tzinfo(zone, fp):
       transition_info.append(memorized_ttinfo(utcoffset, dst, tzname))
 
     cls = type(zone, (DstTzInfo,), dict(
-        zone=zone,
-        _utc_transition_times=transitions,
-        _transition_info=transition_info))
+      zone=zone,
+      _utc_transition_times=transitions,
+      _transition_info=transition_info))
 
   return cls()
 

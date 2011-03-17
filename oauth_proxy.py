@@ -1,7 +1,7 @@
 import urllib
 
+from twitter import SIGNIN_URL
 from xml.dom import minidom
-from constant import *
 from google.appengine.api import urlfetch
 
 def login_oauth(web_url, username, password):

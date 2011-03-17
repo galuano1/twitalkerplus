@@ -25,7 +25,7 @@ __all__ = [
     'all_timezones', 'all_timezones_set',
     'common_timezones', 'common_timezones_set',
     'loader',
-]
+    ]
 
 import  datetime, os.path
 from UserDict import DictMixin
@@ -74,6 +74,7 @@ loader = TimezoneLoader()
 
 def open_resource(name):
   return loader.open_resource(name)
+
 
 def resource_exists(name):
   return loader.resource_exists(name)
@@ -289,6 +290,7 @@ class _LazyList(UserList):
     return self._data
 
   data = property(data)
+
 
 class _CountryTimezoneDict(_LazyDict):
   """Map ISO 3166 country code to a list of timezone names commonly used
@@ -1033,8 +1035,8 @@ all_timezones_unfiltered =\
  'Zulu']
 
 all_timezones = _LazyList(
-    lambda: filter(resource_exists, all_timezones_unfiltered)
-    )
+  lambda: filter(resource_exists, all_timezones_unfiltered)
+)
 
 all_timezones_set = set(all_timezones_unfiltered) # XXX
 
@@ -1435,7 +1437,7 @@ common_timezones_unfiltered =\
  'UTC']
 
 common_timezones = _LazyList(
-    lambda: filter(resource_exists, common_timezones_unfiltered)
-    )
+  lambda: filter(resource_exists, common_timezones_unfiltered)
+)
 
 common_timezones_set = set(common_timezones_unfiltered) # XXX

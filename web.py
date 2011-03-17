@@ -1,8 +1,7 @@
 #!/usr/bin/python
 import os
 
-from constant import *
-from mylocale import gettext
+from mylocale import gettext, LOCALES
 from functools import partial
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -23,6 +22,7 @@ class cron_handler(webapp.RequestHandler):
 
   def post(self):
     return
+
 
 def main():
   application = webapp.WSGIApplication([('/', cron_handler)])

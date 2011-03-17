@@ -19,6 +19,7 @@ def set_jid(jid):
   _jid = jid
   _user = GoogleUser.get_by_jid(jid)
 
+
 def parse_status(status):
   if 'retweeted_status' in status and _user.official_retweet:
     status = status['retweeted_status']
@@ -55,6 +56,7 @@ def parse_status(status):
     msg_dict['source'] = ''
   return Template(unicode(_user.msg_template)).safe_substitute(msg_dict)
 
+
 def parse_statuses(statuses, reverse=True, filter_self=False):
   if statuses:
     msgs = list()
@@ -81,6 +83,7 @@ def generate_short_id(id):
     id_list.short_id_list[id_list.list_pointer] = id
     IdList.set(_jid, id_list)
     return id_list.list_pointer
+
 
 def restore_short_id(short_id, jid):
   if short_id < MAX_SHORT_ID_LIST_NUM:

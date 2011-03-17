@@ -1,13 +1,17 @@
 #!/usr/bin/python
-from db import *
 from time import time
 from google.appengine.api import taskqueue
 from google.appengine.api import xmpp
-from google.appengine.ext import webapp
+from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.runtime import DeadlineExceededError
 
-MAX_RETRY = 3
+CRON_NUM = 10
+
+TASK_QUEUE_NUM = 10
+
+USERS_NUM_IN_TASK = 8
+
 
 class cron_handler(webapp.RequestHandler):
   def get(self, cron_id):
@@ -25,7 +29,7 @@ class cron_handler(webapp.RequestHandler):
 
     def flush_tasks():
       def db_op():
-        for _ in xrange(MAX_RETRY):
+        while db.WRITE_CAPABILITY:
           try:
             self.queues[self.queue_pointer].add(self.tasks)
           except taskqueue.TransientError:
@@ -42,6 +46,7 @@ class cron_handler(webapp.RequestHandler):
     self.queue_pointer = cron_id % TASK_QUEUE_NUM
     self.tasks = list()
     self.jids = list()
+    from db import GoogleUser, Db
     data = GoogleUser.get_all(shard=cron_id)
     try:
       for u in data:
@@ -62,6 +67,7 @@ class cron_handler(webapp.RequestHandler):
       self.response.clear()
       self.response.set_status(500)
       self.response.out.write("This operation could not be completed in time...")
+
 
 def main():
   application = webapp.WSGIApplication([('/cron(\d+)', cron_handler)], debug=True)

@@ -5,11 +5,16 @@ import time
 import sys
 
 from google.appengine.api import memcache
-from constant import *
 from google.appengine.ext import db
 from google.appengine.runtime import DeadlineExceededError
 
 _short_id_list = dict()
+
+MODE_DM = 8
+MODE_MENTION = 4
+MODE_LIST = 2
+MODE_HOME = 1
+MODE_NONE = 0
 
 class GoogleUser(db.Model):
   enabled_user = db.StringProperty(default='')
@@ -50,6 +55,7 @@ class GoogleUser(db.Model):
   def add(jid):
     count = counter.Counter('count')
     count.increment()
+    from cron import CRON_NUM
     shard = count.count % CRON_NUM
     google_user = GoogleUser(key_name=jid, shard=shard, last_update=int(time.time()))
     google_user.jid = jid
@@ -82,6 +88,7 @@ class GoogleUser(db.Model):
     if user:
       user.enabled_user = ''
       Db.set_datastore(user)
+
 
 class TwitterUser(db.Model):
   access_token_key = db.StringProperty(required=True)
@@ -120,6 +127,7 @@ class TwitterUser(db.Model):
       else:
         user = None
     return user
+
 
 class IdList(db.Model):
   short_id_list = list()
@@ -165,6 +173,7 @@ class IdList(db.Model):
     if jid in _short_id_list:
       Db.set_datastore(_short_id_list[jid])
       del _short_id_list[jid]
+
 
 class Db:
   @staticmethod

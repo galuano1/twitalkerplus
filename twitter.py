@@ -11,15 +11,30 @@ from email.utils import parsedate
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
 
+CHARACTER_LIMIT = 140
+
+REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
+
+ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
+
+AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
+
+SIGNIN_URL = 'https://api.twitter.com/oauth/authenticate'
+
+BASE_URL = 'https://api.twitter.com/1'
+
 class TwitterError(Exception):
   def __init__(self, message=None):
     self.message = message
 
+
 class TwitterAuthenticationError(TwitterError):
   pass
 
+
 class TwitterInternalServerError(TwitterError):
   pass
+
 
 class Api(object):
   def __init__(self, consumer_key=None, consumer_secret=None, access_token_key=None, access_token_secret=None,
