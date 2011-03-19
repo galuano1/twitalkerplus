@@ -69,6 +69,8 @@ class XMPP_handler(webapp.RequestHandler):
                                 access_token_secret=self._twitter_user.access_token_secret)
         try:
           self._user = self._api.verify_credentials()
+          if not self._user:
+            raise twitter.TwitterAuthenticationError
         except twitter.TwitterAuthenticationError:
           self._google_user.retry += 1
           if self._google_user.retry >= config.MAX_RETRY:
@@ -80,13 +82,9 @@ class XMPP_handler(webapp.RequestHandler):
         else:
           if self._google_user.retry > 0:
             self._google_user.retry = 0
-          try:
-            if self._twitter_user.twitter_name != self._user['screen_name']:
-              self._twitter_user.twitter_name = self._user['screen_name']
-              self._google_user.enabled_user = self._user['screen_name']
-          except TypeError:
-            logging.error('%s: %s' % (jid, unicode(self._user)))
-            return
+          if self._twitter_user.twitter_name != self._user['screen_name']:
+            self._twitter_user.twitter_name = self._user['screen_name']
+            self._google_user.enabled_user = self._user['screen_name']
     else:
       self._twitter_user = Dummy()
       self._api = Dummy()
