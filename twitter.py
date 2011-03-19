@@ -434,6 +434,8 @@ class Api(object):
       return self._process_result(rpc)
 
   def _process_result(self, rpc):
+    if rpc is None:
+      return []
     try:
       response = rpc.get_result()
     except urlfetch.Error:

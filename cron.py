@@ -12,7 +12,6 @@ TASK_QUEUE_NUM = 10
 
 USERS_NUM_IN_TASK = 8
 
-
 class cron_handler(webapp.RequestHandler):
   def get(self, cron_id):
     def add_task_by_jid(jid):
@@ -50,7 +49,7 @@ class cron_handler(webapp.RequestHandler):
     data = GoogleUser.get_all(shard=cron_id)
     try:
       for u in data:
-        if u.display_timeline or u.msg_template.strip():
+        if u.display_timeline and u.msg_template.strip():
           time_delta = int(time()) - u.last_update
           if time_delta >= u.interval * 60 - 30:
             try:
