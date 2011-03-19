@@ -51,6 +51,8 @@ str_list = {
   'RT_MODE': 'Official retweets now will be displayed in RT style.',
   'BOLD_MODE_ON': 'Username will be bold.',
   'BOLD_MODE_OFF': 'Username will not be bold.',
+  'REVERSE_MODE_ON': 'Statuses will not be displayed reversed.',
+  'REVERSE_MODE_OFF': 'Statuses will be displayed reversed.',
   'MSG_TEMPLATE': 'Status template is\n%s',
   'DATE_TEMPLATE': 'Date format is\n%s',
   'NOW_USING': 'Now you are using %s.',
@@ -103,8 +105,9 @@ str_list = {
     -retweet: toggle retweet display
     -locale: change language
     -timezone: change timezone
-    -bold: toggle bold
+    -bold: toggle username bold
     -prefix: change prefix
+    -reverse: toggle status reversed
     Authentication:
     -oauth: start oauth authentication
     -bind: bind user
@@ -168,5 +171,7 @@ str_list = {
   'HELP_BOLD': 'USAGE: -bold [VALUE]\nToggle bold for username and mentions containing your username.\nValue accepts following: yes|true|1 no|false|0\nIf no value is given ,display current value.'
   ,
   'HELP_PREFIX': 'USAGE: -prefix [PREFIX]\nChange command prefix. Default is a hyphen.\nCAUTIONS: CHANGE THIS SETTING AFTER YOU KNOW WHAT YOU ARE DOING, IT MAY BREAK EVERYTHING AND CANT BE RESTORED.\nIf no prefix is given, display current instead.'
+  ,
+  'HELP_REVERSE': 'USAGE: -reverse [VALUE]\nToggle statuses reversed for display (default reversed)\nValue accepts following: yes|true|1 no|false|0\nIf no value is given ,display current value.'
   ,
   }

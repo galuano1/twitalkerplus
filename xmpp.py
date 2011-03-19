@@ -632,6 +632,21 @@ class XMPP_handler(webapp.RequestHandler):
       return _('BOLD_MODE_ON') if self._google_user.bold_username else _('BOLD_MODE_OFF')
     raise NotImplementedError
 
+  def func_reverse(self, args):
+    length = len(args)
+    if not length or length:
+      if length == 1:
+        value = args[0].lower()
+        if value in ('true', '1', 'yes'):
+          value = True
+        elif value in ('false', '0', 'no'):
+          value = False
+        else:
+          raise NotImplementedError
+        self._google_user.reverse = value
+      return _('REVERSE_MODE_ON') if self._google_user.reverse else _('REVERSE_MODE_OFF')
+    raise NotImplementedError
+
   def func_msgtpl(self, args):
     if len(args):
       tpl = ' '.join(args)

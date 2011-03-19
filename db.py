@@ -37,6 +37,7 @@ class GoogleUser(db.Model):
   list_id = db.IntegerProperty(default=0)
   list_name = db.StringProperty(default='')
   official_retweet = db.BooleanProperty(default=True)
+  reverse = db.BooleanProperty(default=False)
 
   _jid = None
 

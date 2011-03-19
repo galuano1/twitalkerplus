@@ -51,6 +51,8 @@ str_list = {
   'RT_MODE': u'官方转发现在起将显示为RT样式。',
   'BOLD_MODE_ON': u'用户名将被用粗体显示。',
   'BOLD_MODE_OFF': u'用户名将不再用粗体显示。',
+  'REVERSE_MODE_ON': u'推将不再以倒序显示',
+  'REVERSE_MODE_OFF': u'推将以倒序显示',
   'MSG_TEMPLATE': u'状态的模板为：\n%s',
   'DATE_TEMPLATE': u'时间显示格式为：\n%s',
   'NOW_USING': u'你当前正在使用%s。',
@@ -104,6 +106,7 @@ str_list = {
     -timezone：指定时区
     -bold：指定用户名是否加粗
     -prefix：指定命令前缀
+    -reverse：指定推是否倒序显示
     认证类:
     -oauth：开始OAuth认证
     -bind：绑定PIN码完成认证
@@ -155,5 +158,7 @@ str_list = {
   'HELP_BOLD': u'用法： -bold [值]\n切换是否加粗推的用户名和推中你的用户名（仅对GTalk官方客户端有效）\n值可以是以下：\n是) yes|true|1\n否) no|false|0\n如果没有指定值，则显示当前值。'
   ,
   'HELP_PREFIX': u'用法： -prefix [前缀]\n修改每条命令前用于识别的前缀。默认的前缀是英文短连词线。\n警告：你最好搞清楚你在做什么后再修改，否则很可能弄得一团糟并且无法恢复。\n如果不指定前缀，则显示当前前缀。'
+  ,
+  'HELP_REVERSE': u'用法： -reverse [值]\n切换是否把推倒序显示（默认是倒序）\n值可以是以下：\n是) yes|true|1\n否) no|false|0\n如果没有指定值，则显示当前值。'
   ,
   }

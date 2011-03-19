@@ -60,6 +60,8 @@ def parse_status(status):
 def parse_statuses(statuses, reverse=True, filter_self=False):
   if statuses:
     msgs = list()
+    if _user.reverse:
+      reverse = not reverse
     if reverse:
       statuses.reverse()
     for status in statuses:

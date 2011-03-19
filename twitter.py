@@ -24,9 +24,7 @@ SIGNIN_URL = 'https://api.twitter.com/oauth/authenticate'
 BASE_URL = 'https://api.twitter.com/1'
 
 class TwitterError(Exception):
-  def __init__(self, message=None):
-    self.message = message
-
+  pass
 
 class TwitterAuthenticationError(TwitterError):
   pass
