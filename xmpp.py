@@ -128,6 +128,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Status is a duplicate' in e.message:
           return _('STATUS_DUPLICATE')
+        else:
+          return ''
       return _('SUCCESSFULLY_UPDATE_STATUS')
 
   def func_msg(self, args):
@@ -153,6 +155,10 @@ class XMPP_handler(webapp.RequestHandler):
               break
             else:
               return _('STATUS_NOT_FOUND') % id_str
+          else:
+            return ''
+        if status is None:
+          break
         statuses.append(status)
         if 'in_reply_to_status_id' in status:
           id = status['in_reply_to_status_id']
@@ -185,6 +191,10 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'No status found' in e.message:
           return _('STATUS_NOT_FOUND') % id_str
+        else:
+          return ''
+      if status is None:
+        return ''
       message = u'@%s %s' % (status['user']['screen_name'], ' '.join(args[1:]))
       if len(message) > twitter.CHARACTER_LIMIT:
         return _('WORDS_COUNT_EXCEED') % (len(message), twitter.CHARACTER_LIMIT)
@@ -193,6 +203,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Status is a duplicate' in e.message:
           return _('STATUS_DUPLICATE')
+        else:
+          return ''
       return _('SUCCESSFULLY_REPLY_TO') % status['user']['screen_name']
     raise NotImplementedError
 
@@ -222,6 +234,8 @@ class XMPP_handler(webapp.RequestHandler):
           return _('USER_NOT_FOUND') % args[0]
         elif 'You cannot send messages to users who are not following you' in e.message:
           return _('MESSAGE_TO_NOT_FOLLOWED')
+        else:
+          return ''
       return _('SUCCESSFULLY_MESSAGE') % args[0]
     raise NotImplementedError
 
@@ -236,6 +250,8 @@ class XMPP_handler(webapp.RequestHandler):
           return _('BLOCKED') % args[0]
         elif 'Not found' in e.message:
           return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
       return _('SUCCESSFULLY_FOLLOW') % args[0]
     raise NotImplementedError
 
@@ -248,6 +264,8 @@ class XMPP_handler(webapp.RequestHandler):
           return _('You are not friends with %s') % args[0]
         elif 'Not found' in e.message:
           return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
       return _('SUCCESSFULLY_UNFOLLOW') % args[0]
     raise NotImplementedError
 
@@ -258,6 +276,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Could not find both specified users' in e.message:
           return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
       if result:
         return _('FOLLOWING_YOU') % args[0]
       else:
@@ -271,6 +291,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Not found' in e.message:
           return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
       return _('SUCCESSFULLY_BLOCK') % args[0]
     raise NotImplementedError
 
@@ -281,6 +303,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Not found' in e.message:
           return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
       return _('SUCCESSFULLY_UNBLOCK') % args[0]
     raise NotImplementedError
 
@@ -307,6 +331,10 @@ class XMPP_handler(webapp.RequestHandler):
           return _('STATUS_NOT_FOUND') % id_str
         elif "You may not delete another user's status" in e.message:
           return _('DELETE_ANOTHER_USER_STATUS')
+        else:
+          return ''
+      if response is None:
+        return ''
       return _('STATUS_DELETED') % (id_str, response['text'])
     raise NotImplementedError
 
@@ -370,6 +398,10 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Not found' in e.message:
           return _('LIST_NOT_FOUND') % (list_id if user == self._google_user.enabled_user else user + '/' + list_id)
+        else:
+          return ''
+      if response is None:
+        return None
       self._google_user.list_user = response['user']['screen_name']
       self._google_user.list_id = response['id']
       self._google_user.list_name = response['slug']
@@ -398,6 +430,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'No status found' in e.message:
           return _('STATUS_NOT_FOUND') % id_str
+        else:
+          return ''
       return _('FAVOURITED') % id_str
     raise NotImplementedError
 
@@ -418,6 +452,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'No status found' in e.message:
           return _('STATUS_NOT_FOUND') % id_str
+        else:
+          return ''
       return _('UNFAVOURITED') % id_str
     raise NotImplementedError
 
@@ -429,7 +465,12 @@ class XMPP_handler(webapp.RequestHandler):
       page = args[0][1:]
     else:
       raise NotImplementedError
-    statuses = self._api.get_home_timeline(page=int(page))
+    try:
+      statuses = self._api.get_home_timeline(page=int(page))
+    except twitter.TwitterError:
+      return ''
+    if statuses is None:
+      return None
     return _('TIMELINE') + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
 
   def func_timeline(self, args):
@@ -449,6 +490,10 @@ class XMPP_handler(webapp.RequestHandler):
         return _('USER_NOT_FOUND') % screen_name
       elif 'Not authorized' in e.message:
         return _('PROTECTED_USER')
+      else:
+        return ''
+    if statuses is None:
+      return ''
     return _('USER_TIMELINE') % screen_name + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
 
   def func_list(self, args):
@@ -475,6 +520,10 @@ class XMPP_handler(webapp.RequestHandler):
     except twitter.TwitterError, e:
       if 'Not found' in e.message:
         return _('LIST_NOT_FOUND') % args[0]
+      else:
+        return ''
+    if statuses is None:
+      return ''
     return _('LIST') % (user + '/' + str(list_id)) + _('PAGE') % str(page) + '\n\n' + utils.parse_statuses(statuses)
 
   def func_ra(self, args):
@@ -495,6 +544,10 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'No status found' in e.message:
           return _('STATUS_NOT_FOUND') % id_str
+        else:
+          return ''
+      if status is None:
+        return ''
       mention_users = [status['user']['screen_name']]
       if 'user_mentions' in status['entities']:
         for u in status['entities']['user_mentions']:
@@ -509,6 +562,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Status is a duplicate' in e.message:
           return _('STATUS_DUPLICATE')
+        else:
+          return ''
       return _('SUCCESSFULLY_REPLY_TO') % ', '.join(mention_users)
     raise NotImplementedError
 
@@ -529,6 +584,8 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'No status found' in e.message:
           return _('STATUS_NOT_FOUND') % id_str
+        else:
+          return ''
       return _('SUCCESSFULLY_RETWEET') % id_str
     raise NotImplementedError
 
@@ -553,6 +610,8 @@ class XMPP_handler(webapp.RequestHandler):
         else:
           logging.error(e)
           return ''
+      if status is None:
+        return ''
       if length > 1:
         user_msg = ' '.join(args[1:])
       else:
@@ -568,7 +627,6 @@ class XMPP_handler(webapp.RequestHandler):
         if 'Status is a duplicate' in e.message:
           return _('STATUS_DUPLICATE')
         else:
-          logging.error('RT Error: %s' % e.message)
           return ''
       else:
         return _('SUCCESSFULLY_RT') % (id_str, json['text'])
@@ -700,6 +758,10 @@ class XMPP_handler(webapp.RequestHandler):
       except twitter.TwitterError, e:
         if 'Not found' in e.message:
           return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
+      if result is None:
+        return ''
       result['profile_image_url'] = result['profile_image_url'].replace('_normal.', '.')
       for x in result:
         if result[x] is None:

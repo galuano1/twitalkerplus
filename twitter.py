@@ -434,18 +434,15 @@ class Api(object):
       return self._process_result(rpc)
 
   def _process_result(self, rpc):
-    if rpc is None:
-      return []
     try:
       response = rpc.get_result()
-    except urlfetch.Error:
-      return []
-    try:
       json = simplejson.loads(response.content)
     except ValueError:
+      return None
+    except BaseException, e:
       if '500 Internal Server Error' in response.content:
         raise TwitterInternalServerError('500 Internal Server Error')
       else:
-        return []
+        raise TwitterError(e.message)
     self._check_for_twitter_error(json)
     return json
