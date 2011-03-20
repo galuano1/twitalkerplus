@@ -436,6 +436,9 @@ class Api(object):
   def _process_result(self, rpc):
     try:
       response = rpc.get_result()
+    except urlfetch.Error, e:
+      raise TwitterError(e.message)
+    try:
       json = simplejson.loads(response.content)
     except ValueError:
       return None
