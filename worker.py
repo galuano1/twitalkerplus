@@ -71,10 +71,8 @@ class worker_handler(webapp.RequestHandler):
       home_mention_statuses = []
       all_statuses = []
 
-      if google_user.display_timeline & MODE_HOME:
+      if google_user.display_timeline & MODE_HOME or google_user.display_timeline & MODE_MENTION:
         home_rpc = api.get_home_timeline(since_id=google_user.last_msg_id, async=True)
-      elif google_user.display_timeline & MODE_MENTION:
-        home_rpc = api.get_home_timeline(since_id=google_user.last_mention_id, async=True)
       else:
         home_rpc = None
       if google_user.display_timeline & MODE_LIST:
@@ -122,6 +120,8 @@ class worker_handler(webapp.RequestHandler):
           statuses = api._process_result(mention_rpc)
           if statuses:
             all_statuses.extend(statuses)
+            if statuses[0]['id'] > google_user.last_mention_id:
+              google_user.last_mention_id = statuses[0]['id']
           if not google_user.display_timeline & MODE_HOME:
             try:
               home_statuses = api._process_result(home_rpc)
@@ -134,15 +134,11 @@ class worker_handler(webapp.RequestHandler):
             else:
               if home_statuses:
                 if home_statuses[0]['id'] > google_user.last_mention_id:
-                  google_user.last_mention_id = home_statuses[0]['id']
+                  google_user.last_msg_id = home_statuses[0]['id']
                 at_username = '@' + google_user.enabled_user
                 home_mention_statuses = [x for x in home_statuses if at_username in x['text']]
               if home_mention_statuses:
                 all_statuses.extend(home_mention_statuses)
-              if home_statuses and home_statuses[0]['id'] > google_user.last_mention_id:
-                google_user.last_mention_id = home_statuses[0]['id']
-              if statuses and statuses[0]['id'] > google_user.last_mention_id:
-                google_user.last_mention_id = statuses[0]['id']
         except twitter.TwitterInternalServerError:
           pass
         except BaseException:
