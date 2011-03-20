@@ -133,10 +133,10 @@ class worker_handler(webapp.RequestHandler):
               logging.error(google_user.jid + ' Home:\n' + err.getvalue())
             else:
               if home_statuses:
-                if home_statuses[0]['id'] > google_user.last_mention_id:
+                if home_statuses[0]['id'] > google_user.last_msg_id:
                   google_user.last_msg_id = home_statuses[0]['id']
                 at_username = '@' + google_user.enabled_user
-                home_mention_statuses = [x for x in home_statuses if at_username in x['text']]
+                home_mention_statuses = [x for x in home_statuses if at_username in x['text'] and x['id'] > google_user.last_mention_id]
               if home_mention_statuses:
                 all_statuses.extend(home_mention_statuses)
         except twitter.TwitterInternalServerError:
