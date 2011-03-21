@@ -724,6 +724,12 @@ class XMPP_handler(webapp.RequestHandler):
       return _('COMMAND_PREFIX') % self._google_user.command_prefix
     raise NotImplementedError
 
+  def func_prefix_space(self, args):
+    if not args:
+      return self.func_prefix([' '])
+    else:
+      raise NotImplementedError
+
   def func_switch(self, args):
     length = len(args)
     if length > 1:
