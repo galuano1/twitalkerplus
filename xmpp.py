@@ -240,7 +240,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_follow(self, args):
-    if len(args) == 1:
+    if len(args) == 1 and args[0].isalnum():
       try:
         self._api.create_friendship(args[0])
       except twitter.TwitterError, e:
@@ -256,7 +256,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_unfollow(self, args):
-    if len(args) == 1:
+    if len(args) == 1 and args[0].isalnum():
       try:
         self._api.destroy_friendship(args[0])
       except twitter.TwitterError, e:
@@ -270,7 +270,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_if(self, args):
-    if len(args) == 1:
+    if len(args) == 1 and args[0].isalnum():
       try:
         result = self._api.exists_friendship(self._google_user.enabled_user, args[0])
       except twitter.TwitterError, e:
@@ -285,7 +285,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_block(self, args):
-    if len(args) == 1:
+    if len(args) == 1 and args[0].isalnum():
       try:
         self._api.create_block(args[0])
       except twitter.TwitterError, e:
@@ -297,7 +297,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_unblock(self, args):
-    if len(args) == 1:
+    if len(args) == 1 and args[0].isalnum():
       try:
         self._api.destroy_block(args[0])
       except twitter.TwitterError, e:
@@ -757,8 +757,10 @@ class XMPP_handler(webapp.RequestHandler):
     else:
       if not length:
         user = self._user['screen_name']
-      else:
+      elif args[0].isalnum():
         user = args[0]
+      else:
+        raise NotImplementedError
       try:
         result = self._api.get_user(user)
       except twitter.TwitterError, e:
@@ -830,7 +832,7 @@ class XMPP_handler(webapp.RequestHandler):
       raise NotImplementedError
 
   def func_bind(self, args, oauth_token=None):
-    if len(args) == 1:
+    if len(args) == 1 and args[0].isalnum():
       jid = self._google_user.jid
       if oauth_token is None:
         twitter_user = TwitterUser.get_by_twitter_name(None, jid)
