@@ -29,6 +29,7 @@ str_list = {
   'NOT_FOLLOWING_YOU': u'%s 没有跟随你 :(',
   'SUCCESSFULLY_BLOCK': u'成功屏蔽%s',
   'SUCCESSFULLY_UNBLOCK': u'成功解除屏蔽%s',
+  'SUCCESSFULLY_SPAM': u'成功举报%s为垃圾用户',
   'STATUS_DELETED': u'状态%s已删除，内容为：\n%s',
   'DELETE_ANOTHER_USER_STATUS': u'不能删除其他人的状态',
   'ON_MODE': u'你已打开%s的更新。\n所有可打开的更新有list（列表）, home（主页）, mention（提及）, dm（私信）。',
@@ -92,6 +93,7 @@ str_list = {
     -if：判断对方是否跟随你
     -b/-block：屏蔽用户
     -ub/-unblock：取消屏蔽用户
+    -spam：举报垃圾用户
     -lt/-list：查看列表中的推
     -s/-switch：切换用户
     设置类:
@@ -144,6 +146,7 @@ str_list = {
   'HELP_IF': u'用法： -if 用户名\n判断指定用户是否跟随了你。',
   'HELP_BLOCK': u'用法： -b/-block 用户名\n屏蔽指定用户。',
   'HELP_UNBLOCK': u'用法： -ub/-unblock 用户名\n取消屏蔽指定用户。',
+  'HELP_SPAM': u'用法： -spam 用户名\n举报指定用户为垃圾用户。',
   'HELP_SWITCH': u'用户： -s/-switch [用户名]\n切换当前使用的Twitter用户为指定用户。如果不指定用户名，则显示所有已经绑定的用户。',
   'HELP_TIME': u'用法：: -time [时间]\n更改两次更新之间间隔的时间，单位是分钟。如果不指定时间，则显示当前时间间隔。',
   'HELP_MSGTPL': u'用法： -msgtpl [模板字符串]\n修改每条推的模板。当前支持以下关键字：\n$username -> 推或私信的发送用户\n$content -> 推或私信的内容\n$id -> 类似2866000224794214的长ID\n$shortid -> 类似#12的短ID（带井号显示）\n$time -> 推或私信的时间，格式可以用-datefmt命令修改\n$source -> 推的来源\n不建议在关键字后面紧跟下划线，因为下划线也会被识别为关键字的一部分。\n你可以在模板结尾处添加若干\\n来声明结尾的转行和空行。\n如果不指定模板，则显示当前模板。'

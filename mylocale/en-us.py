@@ -29,6 +29,7 @@ str_list = {
   'NOT_FOLLOWING_YOU': '%s is not following you :(',
   'SUCCESSFULLY_BLOCK': 'Successfully block %s',
   'SUCCESSFULLY_UNBLOCK': 'Successfully unblock %s',
+  'SUCCESSFULLY_SPAM': 'Successfully report %s as spam.',
   'STATUS_DELETED': 'Status %s is deleted, content is:\n%s',
   'DELETE_ANOTHER_USER_STATUS': "You may not delete another user's status.",
   'ON_MODE': 'You turned on update for %s.\nAll parts are list, home, mention, dm.',
@@ -94,6 +95,8 @@ str_list = {
     -if: determine whether user follow you
     -b/-block: block user
     -ub/-unblock: unblock user
+    -spam: report user as spam
+    -s/-switch: switch to another user
     Settings:
     -on: view or turn on updates
     -off: view or turn off updates
@@ -155,6 +158,7 @@ str_list = {
   'HELP_IF': 'USAGE: -if USERNAME\nDetermine whether specified user follow you or not.',
   'HELP_BLOCK': 'USAGE: -b/-block USERNAME\nBlock specified user.',
   'HELP_UNBLOCK': 'USAGE: -ub/-unblock USERNAME\nUnblock specified user.',
+  'HELP_SPAM': 'USAGE: -spam USERNAME\nReport specified user as spam.',
   'HELP_SWITCH': 'USAGE: -s/-switch [USERNAME]\nSwitch user that relate with you. If no username is given, list all users relate to you.'
   ,
   'HELP_TIME': 'USAGE: -time [MINUTES]\nChange time interval between two updates, in minutes. If no minutes is given, display current interval instead.'

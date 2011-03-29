@@ -325,6 +325,10 @@ class Api(object):
     url = '%s/blocks/create.json' % self.base_url
     return self._fetch_url(url, parameters={'screen_name': user}, http_method='POST')
 
+  def report_spam(self, user):
+    url = '%s/report_spam.json' % self.base_url
+    return self._fetch_url(url, parameters={'screen_name': user}, http_method='POST')
+
   def destroy_block(self, user):
     url = '%s/blocks/destroy.json' % self.base_url
     return self._fetch_url(url, parameters={'screen_name': user}, http_method='POST')

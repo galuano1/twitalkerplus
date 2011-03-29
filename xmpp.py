@@ -296,6 +296,18 @@ class XMPP_handler(webapp.RequestHandler):
       return _('SUCCESSFULLY_BLOCK') % args[0]
     raise NotImplementedError
 
+  def func_spam(self, args):
+    if len(args) == 1 and args[0].isalnum():
+      try:
+        self._api.report_spam(args[0])
+      except twitter.TwitterError, e:
+        if 'Not found' in e.message:
+          return _('USER_NOT_FOUND') % args[0]
+        else:
+          return ''
+      return _('SUCCESSFULLY_SPAM') % args[0]
+    raise NotImplementedError
+
   def func_unblock(self, args):
     if len(args) == 1 and args[0].isalnum():
       try:
