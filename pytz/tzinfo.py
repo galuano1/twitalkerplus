@@ -108,7 +108,7 @@ class StaticTzInfo(BaseTzInfo):
   def __repr__(self):
     return '<StaticTzInfo %r>' % (self.zone,)
 
-  def __reduce__(self):
+  def __reduce__(self, *args, **kwargs):
     # Special pickle to zone remains a singleton and to cope with
     # database changes.
     return pytz._p, (self.zone,)
@@ -358,7 +358,7 @@ class DstTzInfo(BaseTzInfo):
       self.zone, self._tzname, self._utcoffset, dst
       )
 
-  def __reduce__(self):
+  def __reduce__(self, *args, **kwargs):
     # Special pickle to zone remains a singleton and to cope with
     # database changes.
     return pytz._p, (

@@ -6,7 +6,6 @@ import sys
 
 from google.appengine.api import memcache
 from google.appengine.ext import db
-from google.appengine.runtime import DeadlineExceededError
 
 _short_id_list = dict()
 
@@ -16,7 +15,51 @@ MODE_LIST = 2
 MODE_HOME = 1
 MODE_NONE = 0
 
-class GoogleUser(db.Model):
+class MyModel(db.Model):
+  def put(self, **kwargs):
+    while db.WRITE_CAPABILITY:
+      try:
+        return super(MyModel, self).put(**kwargs)
+      except db.Timeout:
+        pass
+
+  def delete(self, **kwargs):
+    while db.WRITE_CAPABILITY:
+      try:
+        return super(MyModel, self).delete(**kwargs)
+      except db.Timeout:
+        pass
+
+  @classmethod
+  def get_by_key_name(cls, key_names, parent=None, **kwargs):
+    while db.READ_CAPABILITY:
+      try:
+        return super(MyModel, cls).get_by_key_name(key_names=key_names, parent=parent, **kwargs)
+      except db.Timeout:
+        pass
+
+
+class Session(MyModel):
+  shard = db.IntegerProperty(required=True)
+
+  @staticmethod
+  def get_all(shard=None, cursor=None):
+    while True:
+      query = Session.all()
+      if cursor is not None:
+        query.with_cursor(cursor)
+      if shard is not None:
+        query.filter('shard =', int(shard))
+      try:
+        for q in query:
+          yield q
+      except db.Timeout:
+        cursor = query.cursor()
+      else:
+        break
+
+
+class GoogleUser(MyModel):
   enabled_user = db.StringProperty(default='')
   shard = db.IntegerProperty(required=True)
   interval = db.IntegerProperty(default=3)
@@ -67,13 +110,7 @@ class GoogleUser(db.Model):
   def get_by_jid(jid):
     user = memcache.get(jid, 'jid')
     if user is None:
-      while db.READ_CAPABILITY:
-        try:
-          user = GoogleUser.get_by_key_name(jid)
-        except db.Timeout:
-          pass
-        else:
-          break
+      user = GoogleUser.get_by_key_name(jid)
       if user:
         Db.set_cache(user)
       else:
@@ -104,7 +141,7 @@ class GoogleUser(db.Model):
       Db.set_datastore(user)
 
 
-class TwitterUser(db.Model):
+class TwitterUser(MyModel):
   access_token_key = db.StringProperty(required=True)
   access_token_secret = db.StringProperty()
   twitter_name = db.StringProperty()
@@ -157,7 +194,7 @@ class TwitterUser(db.Model):
     return user
 
 
-class IdList(db.Model):
+class IdList(MyModel):
   short_id_list = list()
   short_id_list_str = db.TextProperty(default='')
   list_pointer = db.IntegerProperty(default=0)
@@ -180,13 +217,7 @@ class IdList(db.Model):
       short_id_list = memcache.get(jid, 'short_id_list')
       if short_id_list is None:
         cls = type('IdList%d' % shard, (IdList,), {})
-        while db.READ_CAPABILITY:
-          try:
-            short_id_list = cls.get_by_key_name(jid)
-          except db.Timeout:
-            pass
-          else:
-            break
+        short_id_list = cls.get_by_key_name(jid)
       if short_id_list is None:
         short_id_list = IdList.add(jid, shard)
       else:
@@ -232,13 +263,10 @@ class Db:
   @staticmethod
   def set_datastore(data):
     def datastore_set(model):
-      while db.WRITE_CAPABILITY:
-        try:
-          data.put()
-        except db.Timeout:
-          pass
-        else:
-          break
+      try:
+        data.put()
+      except db.BadKeyError:
+        pass
 
     if data.is_saved():
       Db.set_cache(data)

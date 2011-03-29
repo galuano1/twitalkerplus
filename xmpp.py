@@ -7,7 +7,7 @@ import logging
 import config
 
 from string import Template
-from db import TwitterUser, GoogleUser, Db, IdList, MODE_LIST, MODE_MENTION, MODE_DM, MODE_HOME
+from db import TwitterUser, GoogleUser, Db, Session, IdList, MODE_LIST, MODE_MENTION, MODE_DM, MODE_HOME
 from pytz.gae import pytz
 from mylocale import gettext, LOCALES
 from google.appengine.ext import webapp
@@ -361,6 +361,13 @@ class XMPP_handler(webapp.RequestHandler):
           self._google_user.display_timeline |= MODE_DM
         elif a == 'list':
           self._google_user.display_timeline |= MODE_LIST
+    if self._google_user.display_timeline and self._google_user.enabled_user and self._google_user.msg_template.strip():
+      try:
+        flag = xmpp.get_presence(self._google_user.jid)
+      except xmpp.Error:
+        flag = False
+      if flag:
+        Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
     modes = []
     if self._google_user.display_timeline & MODE_LIST:
       modes.append('list')
@@ -721,6 +728,13 @@ class XMPP_handler(webapp.RequestHandler):
       while tpl[-2::] == r'\n':
         tpl = tpl[:len(tpl) - 2] + '\n'
       self._google_user.msg_template = tpl
+      if tpl.strip() and self._google_user.display_timeline and self._google_user.enabled_user:
+        try:
+          flag = xmpp.get_presence(self._google_user.jid)
+        except xmpp.Error:
+          flag = False
+        if flag:
+          Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
     return _('MSG_TEMPLATE') % self._google_user.msg_template
 
   def func_datefmt(self, args):
@@ -757,6 +771,13 @@ class XMPP_handler(webapp.RequestHandler):
         twitter_name_ci = args[0].lower()
         if twitter_name_ci in twitter_users_name_ci:
           i = twitter_users_name_ci.index(twitter_name_ci)
+          if not self._google_user.enabled_user and self._google_user.display_timeline and self._google_user.msg_template.strip():
+            try:
+              flag = xmpp.get_presence(self._google_user.jid)
+            except xmpp.Error:
+              flag = False
+            if flag:
+              Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
           self._google_user.enabled_user = twitter_users_name[i]
           return _('ENABLED_TWITTER_USER_CHANGED') % self._google_user.enabled_user
         else:
@@ -891,8 +912,45 @@ class XMPP_handler(webapp.RequestHandler):
         return ''
 
 
+class XMPP_Available_handler(webapp.RequestHandler):
+  def post(self):
+    jid = self.request.get('from').split('/')[0]
+    u = GoogleUser.get_by_jid(jid)
+    if u and u.enabled_user and u.display_timeline and u.msg_template.strip():
+      Db.set_datastore(Session(key_name=jid, shard=u.shard))
+
+
+class XMPP_Unavailable_handler(webapp.RequestHandler):
+  def post(self):
+    jid = self.request.get('from').split('/')[0]
+    s = Session.get_by_key_name(jid)
+    if s:
+      u = GoogleUser.get_by_jid(jid)
+      if u:
+        try:
+          presence = xmpp.get_presence(jid)
+        except xmpp.Error:
+          presence = False
+        if not presence:
+          s.delete()
+      else:
+        s.delete()
+
+
+class XMPP_Probe_handler(webapp.RequestHandler):
+  def post(self):
+    jid = self.request.get('from').split('/')[0]
+    try:
+      xmpp.send_presence(jid)
+    except xmpp.Error:
+      pass
+
+
 def main():
-  application = webapp.WSGIApplication([('/_ah/xmpp/message/chat/', XMPP_handler)])
+  application = webapp.WSGIApplication([('/_ah/xmpp/message/chat/', XMPP_handler),
+                                        ('/_ah/xmpp/presence/available/', XMPP_Available_handler),
+                                        ('/_ah/xmpp/presence/unavailable/', XMPP_Unavailable_handler),
+                                        ('/_ah/xmpp/presence/probe/', XMPP_Probe_handler)])
   run_wsgi_app(application)
 
 if __name__ == "__main__":

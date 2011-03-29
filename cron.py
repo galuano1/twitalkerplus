@@ -10,24 +10,19 @@ from StringIO import StringIO
 from google.appengine.api import xmpp
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
-from db import Db, GoogleUser, TwitterUser, IdList, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
+from db import Db, GoogleUser, TwitterUser, IdList, Session, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
 
 class cron_handler(webapp.RequestHandler):
   def get(self, cron_id):
     cron_id = int(cron_id)
-
-    data = GoogleUser.get_all(shard=cron_id)
-    for google_user in data:
-      if not google_user.display_timeline or not google_user.msg_template.strip():
+    data = Session.get_all(shard=cron_id)
+    for u in data:
+      google_user = GoogleUser.get_by_jid(u.key().name())
+      if google_user is None:
+        u.delete()
         continue
       time_delta = int(time()) - google_user.last_update
       if time_delta < google_user.interval * 60 - 30:
-        continue
-      try:
-        flag = xmpp.get_presence(google_user.jid)
-      except xmpp.Error:
-        flag = False
-      if not flag:
         continue
       _ = lambda x: gettext(x, locale=google_user.locale)
       twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)

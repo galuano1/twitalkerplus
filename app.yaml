@@ -5,6 +5,7 @@ api_version: 1
 
 inbound_services:
 - xmpp_message
+- xmpp_presence
 
 handlers:
 - url: /
@@ -29,6 +30,18 @@ handlers:
   login: admin
 
 - url: /_ah/xmpp/message/chat/
+  script: xmpp.py
+  login: admin
+
+- url: /_ah/xmpp/presence/available/
+  script: xmpp.py
+  login: admin
+
+- url: /_ah/xmpp/presence/unavailable/
+  script: xmpp.py
+  login: admin
+
+- url: /_ah/xmpp/presence/probe/
   script: xmpp.py
   login: admin
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-from google.appengine.api import memcache 
+from google.appengine.api import memcache
 from google.appengine.ext import db
 import random
 
@@ -27,8 +27,8 @@ class GeneralCounterShard(db.Model):
   """Shards for each named counter"""
   name = db.StringProperty(required=True)
   count = db.IntegerProperty(required=True, default=0)
-  
-            
+
+
 def get_count(name):
   """Retrieve the value for a given sharded counter.
   
@@ -40,10 +40,10 @@ def get_count(name):
     total = 0
     for counter in GeneralCounterShard.all().filter('name = ', name):
       total += counter.count
-    memcache.add(name, str(total), 60)
+    memcache.set(name, total, 60)
   return total
 
-  
+
 def increment(name):
   """Increment the value for a given sharded counter.
   
@@ -51,6 +51,7 @@ def increment(name):
     name - The name of the counter  
   """
   config = GeneralCounterShardConfig.get_or_insert(name, name=name)
+
   def txn():
     index = random.randint(0, config.num_shards - 1)
     shard_name = name + str(index)
@@ -59,11 +60,12 @@ def increment(name):
       counter = GeneralCounterShard(key_name=shard_name, name=name)
     counter.count += 1
     counter.put()
+
   db.run_in_transaction(txn)
   memcache.incr(name)
 
-  
-def increase_shards(name, num):  
+
+def increase_shards(name, num):
   """Increase the number of shards for a given sharded counter.
   Will never decrease the number of shards.
   
@@ -73,9 +75,11 @@ def increase_shards(name, num):
     
   """
   config = GeneralCounterShardConfig.get_or_insert(name, name=name)
+
   def txn():
     if config.num_shards < num:
       config.num_shards = num
-      config.put()    
+      config.put()
+
   db.run_in_transaction(txn)
 

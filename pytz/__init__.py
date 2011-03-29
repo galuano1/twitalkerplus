@@ -195,7 +195,7 @@ class UTC(datetime.tzinfo):
   def dst(self, dt):
     return ZERO
 
-  def __reduce__(self):
+  def __reduce__(self, *args, **kwargs):
     return _UTC, ()
 
   def localize(self, dt, is_dst=False):
@@ -371,7 +371,7 @@ class _FixedOffset(datetime.tzinfo):
   def utcoffset(self, dt):
     return self._offset
 
-  def __reduce__(self):
+  def __reduce__(self, *args, **kwargs):
     return FixedOffset, (self._minutes, )
 
   def dst(self, dt):
