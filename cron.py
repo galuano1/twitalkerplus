@@ -1,71 +1,176 @@
 #!/usr/bin/python
+import twitter
+import config
+import utils
+import logging
+import traceback
+from mylocale import gettext
 from time import time
-from google.appengine.api import taskqueue
+from StringIO import StringIO
 from google.appengine.api import xmpp
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.runtime import DeadlineExceededError
-
-CRON_NUM = 10
-
-TASK_QUEUE_NUM = 10
-
-USERS_NUM_IN_TASK = 8
 
 class cron_handler(webapp.RequestHandler):
   def get(self, cron_id):
-    def add_task_by_jid(jid):
-      self.jids.append(jid)
-      if len(self.jids) >= USERS_NUM_IN_TASK:
-        flush_jids()
-      if len(self.tasks) >= 100:
-        flush_tasks()
-
-    def flush_jids():
-      if self.jids:
-        self.tasks.append(taskqueue.Task(url='/worker', params={'jid': self.jids}))
-        self.jids = list()
-
-    def flush_tasks():
-      def db_op():
-        while db.WRITE_CAPABILITY:
-          try:
-            self.queues[self.queue_pointer].add(self.tasks)
-          except taskqueue.TransientError:
-            continue
-          break
-
-      if self.tasks:
-        db.run_in_transaction(db_op)
-        self.tasks = list()
-        self.queue_pointer = (self.queue_pointer + 1) % TASK_QUEUE_NUM
-
     cron_id = int(cron_id)
-    self.queues = [taskqueue.Queue('fetch' + str(id)) for id in xrange(TASK_QUEUE_NUM)]
-    self.queue_pointer = cron_id % TASK_QUEUE_NUM
-    self.tasks = list()
-    self.jids = list()
-    from db import GoogleUser, Db
+    from db import Db, GoogleUser, TwitterUser, IdList, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
+
     data = GoogleUser.get_all(shard=cron_id)
-    try:
-      for u in data:
-        if u.display_timeline and u.msg_template.strip():
-          time_delta = int(time()) - u.last_update
-          if time_delta >= u.interval * 60 - 30:
+    for google_user in data:
+      if not google_user.display_timeline or not google_user.msg_template.strip():
+        continue
+      time_delta = int(time()) - google_user.last_update
+      if time_delta < google_user.interval * 60 - 30:
+        continue
+      try:
+        flag = xmpp.get_presence(google_user.jid)
+      except xmpp.Error:
+        flag = False
+      if not flag:
+        continue
+      _ = lambda x: gettext(x, locale=google_user.locale)
+      try:
+        twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
+      except db.Error:
+        continue
+      if twitter_user is None:
+        google_user.enabled_user = ''
+        Db.set_datastore(google_user)
+        continue
+      api = twitter.Api(consumer_key=config.OAUTH_CONSUMER_KEY,
+                        consumer_secret=config.OAUTH_CONSUMER_SECRET,
+                        access_token_key=twitter_user.access_token_key,
+                        access_token_secret=twitter_user.access_token_secret)
+      try:
+        self._user = api.verify_credentials()
+        if not self._user or 'screen_name' not in self._user:
+          raise twitter.TwitterError
+      except twitter.TwitterError:
+        google_user.retry += 1
+        if google_user.retry >= config.MAX_RETRY:
+          GoogleUser.disable(jid=google_user.jid)
+          xmpp.send_message(google_user.jid, _('NO_AUTHENTICATION'))
+        else:
+          Db.set_cache(google_user)
+        continue
+      finally:
+        if google_user.retry > 0:
+          google_user.retry = 0
+          Db.set_cache(google_user)
+      if twitter_user.twitter_name != self._user['screen_name']:
+        twitter_user.twitter_name = self._user['screen_name']
+        Db.set_cache(twitter_user)
+        google_user.enabled_user = self._user['screen_name']
+        Db.set_cache(google_user)
+      utils.set_jid(google_user.jid)
+      home_statuses = []
+      home_mention_statuses = []
+      all_statuses = []
+
+      if google_user.display_timeline & MODE_HOME or google_user.display_timeline & MODE_MENTION:
+        home_rpc = api.get_home_timeline(since_id=google_user.last_msg_id, async=True)
+      else:
+        home_rpc = None
+      if google_user.display_timeline & MODE_LIST:
+        list_rpc = api.get_list_statuses(user=google_user.list_user, id=google_user.list_id,
+                                         since_id=google_user.last_list_id, async=True)
+      else:
+        list_rpc = None
+      if google_user.display_timeline & MODE_MENTION:
+        mention_rpc = api.get_mentions(since_id=google_user.last_mention_id, async=True)
+      else:
+        mention_rpc = None
+      if google_user.display_timeline & MODE_DM:
+        dm_rpc = api.get_direct_messages(since_id=google_user.last_dm_id, async=True)
+      else:
+        dm_rpc = None
+      if google_user.display_timeline & MODE_HOME:
+        try:
+          home_statuses = api._process_result(home_rpc)
+          if home_statuses:
+            all_statuses.extend(home_statuses)
+            if home_statuses[0]['id'] > google_user.last_msg_id:
+              google_user.last_msg_id = home_statuses[0]['id']
+        except twitter.TwitterInternalServerError:
+          pass
+        except BaseException:
+          err = StringIO('')
+          traceback.print_exc(file=err)
+          logging.error(google_user.jid + ' Home:\n' + err.getvalue())
+      if google_user.display_timeline & MODE_LIST:
+        try:
+          statuses = api._process_result(list_rpc)
+          if statuses:
+            all_statuses.extend(statuses)
+            if statuses[0]['id'] > google_user.last_list_id:
+              google_user.last_list_id = statuses[0]['id']
+        except twitter.TwitterInternalServerError:
+          pass
+        except BaseException, e:
+          if 'Not found' not in e.message:
+            err = StringIO('')
+            traceback.print_exc(file=err)
+            logging.error(google_user.jid + ' List:\n' + err.getvalue())
+      if google_user.display_timeline & MODE_MENTION:
+        try:
+          statuses = api._process_result(mention_rpc)
+          if statuses:
+            all_statuses.extend(statuses)
+            if statuses[0]['id'] > google_user.last_mention_id:
+              google_user.last_mention_id = statuses[0]['id']
+          if not google_user.display_timeline & MODE_HOME:
             try:
-              flag = xmpp.get_presence(u.jid)
-            except xmpp.Error:
-              flag = False
-            if not flag:
-              continue
-            Db.set_cache(u)
-            add_task_by_jid(u.jid)
-      flush_jids()
-      flush_tasks()
-    except DeadlineExceededError:
-      self.response.clear()
-      self.response.set_status(500)
-      self.response.out.write("This operation could not be completed in time...")
+              home_statuses = api._process_result(home_rpc)
+            except twitter.TwitterInternalServerError:
+              pass
+            except BaseException:
+              err = StringIO('')
+              traceback.print_exc(file=err)
+              logging.error(google_user.jid + ' Home:\n' + err.getvalue())
+            else:
+              if home_statuses:
+                if home_statuses[0]['id'] > google_user.last_msg_id:
+                  google_user.last_msg_id = home_statuses[0]['id']
+                at_username = '@' + google_user.enabled_user
+                home_mention_statuses = [x for x in home_statuses if
+                                         at_username in x['text'] and x['id'] > google_user.last_mention_id]
+              if home_mention_statuses:
+                all_statuses.extend(home_mention_statuses)
+        except twitter.TwitterInternalServerError:
+          pass
+        except BaseException:
+          err = StringIO('')
+          traceback.print_exc(file=err)
+          logging.error(google_user.jid + ' Mention:\n' + err.getvalue())
+      if all_statuses:
+        all_statuses.sort(cmp=lambda x, y: cmp(x['id'], y['id']))
+        last = all_statuses[-1]['id']
+        for i in range(len(all_statuses) - 2, -1, -1):
+          if last == all_statuses[i]['id']:
+            del all_statuses[i]
+          else:
+            last = all_statuses[i]['id']
+        content = utils.parse_statuses(all_statuses, filter_self=True, reverse=False)
+        if content.strip():
+          IdList.flush(google_user.jid)
+          xmpp.send_message(google_user.jid, content)
+      if google_user.display_timeline & MODE_DM:
+        try:
+          statuses = api._process_result(dm_rpc)
+          content = utils.parse_statuses(statuses)
+          if content.strip():
+            xmpp.send_message(google_user.jid, _('DIRECT_MESSAGES') + '\n\n' + content)
+            if statuses[-1]['id'] > google_user.last_dm_id:
+              google_user.last_dm_id = statuses[-1]['id']
+        except twitter.TwitterInternalServerError:
+          pass
+        except BaseException:
+          err = StringIO('')
+          traceback.print_exc(file=err)
+          logging.error(google_user.jid + ' DM:\n' + err.getvalue())
+      google_user.last_update = int(time())
+      Db.set_datastore(google_user)
 
 
 def main():

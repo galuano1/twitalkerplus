@@ -23,6 +23,7 @@ class cron_handler(webapp.RequestHandler):
   def post(self):
     return
 
+
 class wave_handler(webapp.RequestHandler):
   def get(self, *args):
     return
@@ -32,6 +33,7 @@ class wave_handler(webapp.RequestHandler):
 
   def post(self, *args):
     return
+
 
 def main():
   application = webapp.WSGIApplication([('/', cron_handler),

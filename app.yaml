@@ -28,10 +28,6 @@ handlers:
   script: cron.py
   login: admin
 
-- url: /worker
-  script: worker.py
-  login: admin
-
 - url: /_ah/xmpp/message/chat/
   script: xmpp.py
   login: admin

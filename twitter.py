@@ -26,6 +26,7 @@ BASE_URL = 'https://api.twitter.com/1'
 class TwitterError(Exception):
   pass
 
+
 class TwitterAuthenticationError(TwitterError):
   pass
 

@@ -41,23 +41,24 @@ class GoogleUser(db.Model):
 
   _jid = None
 
-  def __getattr__(self, item):
-    if item == 'jid':
-      if not self._jid:
-        try:
-          self._jid = self.key().name()
-        except db.NotSavedError:
-          self._jid = ''
-      return self._jid
-    else:
-      raise AttributeError
+  def get_jid(self):
+    if self._jid is None:
+      try:
+        self._jid = self.key().name()
+      except db.NotSavedError:
+        self._jid = ''
+    return self._jid
+
+  def set_jid(self, value):
+    self._jid = value
+
+  jid = property(get_jid, set_jid)
 
   @staticmethod
   def add(jid):
     count = counter.Counter('count')
     count.increment()
-    from cron import CRON_NUM
-    shard = count.count % CRON_NUM
+    shard = count.count % config.CRON_NUM
     google_user = GoogleUser(key_name=jid, shard=shard, last_update=int(time.time()))
     google_user.jid = jid
     Db.set_datastore(google_user)
@@ -67,7 +68,13 @@ class GoogleUser(db.Model):
   def get_by_jid(jid):
     user = memcache.get(jid, 'jid')
     if user is None:
-      user = GoogleUser.get_by_key_name(jid)
+      while db.READ_CAPABILITY:
+        try:
+          user = GoogleUser.get_by_key_name(jid)
+        except db.Error:
+          pass
+        else:
+          break
       if user:
         Db.set_cache(user)
       else:
@@ -76,12 +83,19 @@ class GoogleUser(db.Model):
 
   @staticmethod
   def get_all(shard=None, cursor=None):
-    query = GoogleUser.all().filter('enabled_user >', '')
-    if cursor is not None:
-      query.with_cursor(cursor)
-    if shard is not None:
-      query.filter('shard =', int(shard))
-    return query
+    while True:
+      query = GoogleUser.all().filter('enabled_user >', '')
+      if cursor is not None:
+        query.with_cursor(cursor)
+      if shard is not None:
+        query.filter('shard =', int(shard))
+      try:
+        for q in query:
+          yield q
+      except db.Error:
+        cursor = query.cursor()
+      else:
+        break
 
   @staticmethod
   def disable(jid):
@@ -121,7 +135,13 @@ class TwitterUser(db.Model):
     key_name = name if name is not None else ''
     user = memcache.get(jid + ':' + key_name, 'twitter_name')
     if user is None:
-      user = TwitterUser.all().filter('google_user =', jid).filter('twitter_name =', name).fetch(1)
+      while db.READ_CAPABILITY:
+        try:
+          user = TwitterUser.all().filter('google_user =', jid).filter('twitter_name =', name).fetch(1)
+        except db.Error:
+          pass
+        else:
+          break
       if user:
         user = user[0]
         Db.set_cache(user)
@@ -153,7 +173,13 @@ class IdList(db.Model):
       short_id_list = memcache.get(jid, 'short_id_list')
       if short_id_list is None:
         cls = type('IdList%d' % shard, (IdList,), {})
-        short_id_list = cls.get_by_key_name(jid)
+        while db.READ_CAPABILITY:
+          try:
+            short_id_list = cls.get_by_key_name(jid)
+          except db.Error:
+            pass
+          else:
+            break
       if short_id_list is None:
         short_id_list = IdList.add(jid, shard)
       else:
