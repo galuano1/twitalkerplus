@@ -71,7 +71,7 @@ class GoogleUser(db.Model):
       while db.READ_CAPABILITY:
         try:
           user = GoogleUser.get_by_key_name(jid)
-        except db.Error:
+        except db.Timeout:
           pass
         else:
           break
@@ -92,7 +92,7 @@ class GoogleUser(db.Model):
       try:
         for q in query:
           yield q
-      except db.Error:
+      except db.Timeout:
         cursor = query.cursor()
       else:
         break
@@ -138,7 +138,7 @@ class TwitterUser(db.Model):
       while db.READ_CAPABILITY:
         try:
           user = TwitterUser.all().filter('google_user =', jid).filter('twitter_name =', name).fetch(1)
-        except db.Error:
+        except db.Timeout:
           pass
         else:
           break
@@ -176,7 +176,7 @@ class IdList(db.Model):
         while db.READ_CAPABILITY:
           try:
             short_id_list = cls.get_by_key_name(jid)
-          except db.Error:
+          except db.Timeout:
             pass
           else:
             break
@@ -228,7 +228,7 @@ class Db:
       while db.WRITE_CAPABILITY:
         try:
           data.put()
-        except db.Error:
+        except db.Timeout:
           pass
         else:
           break

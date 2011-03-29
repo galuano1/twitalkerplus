@@ -8,7 +8,7 @@ from mylocale import gettext
 from time import time
 from StringIO import StringIO
 from google.appengine.api import xmpp
-from google.appengine.ext import webapp, db
+from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 class cron_handler(webapp.RequestHandler):
@@ -30,10 +30,7 @@ class cron_handler(webapp.RequestHandler):
       if not flag:
         continue
       _ = lambda x: gettext(x, locale=google_user.locale)
-      try:
-        twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
-      except db.Error:
-        continue
+      twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
       if twitter_user is None:
         google_user.enabled_user = ''
         Db.set_datastore(google_user)
