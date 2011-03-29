@@ -17,7 +17,15 @@ class cron_handler(webapp.RequestHandler):
     cron_id = int(cron_id)
     data = Session.get_all(shard=cron_id)
     for u in data:
-      google_user = GoogleUser.get_by_jid(u.key().name())
+      jid = u.key().name()
+      try:
+        flag = xmpp.get_presence(jid)
+      except xmpp.Error:
+        flag = True
+      if not flag:
+        u.delete()
+        continue
+      google_user = GoogleUser.get_by_jid(jid)
       if google_user is None:
         u.delete()
         continue
