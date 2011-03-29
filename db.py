@@ -56,9 +56,8 @@ class GoogleUser(db.Model):
 
   @staticmethod
   def add(jid):
-    count = counter.Counter('count')
-    count.increment()
-    shard = count.count % config.CRON_NUM
+    counter.increment('total')
+    shard = counter.get_count('total') % config.CRON_NUM
     google_user = GoogleUser(key_name=jid, shard=shard, last_update=int(time.time()))
     google_user.jid = jid
     Db.set_datastore(google_user)
@@ -233,14 +232,9 @@ class Db:
         else:
           break
 
-    try:
-      if data.is_saved():
-        Db.set_cache(data)
-        db.run_in_transaction(datastore_set, data)
-      else:
-        db.run_in_transaction(datastore_set, data)
-        Db.set_cache(data)
-    except db.Timeout:
-      pass
-    except DeadlineExceededError:
-      pass
+    if data.is_saved():
+      Db.set_cache(data)
+      db.run_in_transaction(datastore_set, data)
+    else:
+      db.run_in_transaction(datastore_set, data)
+      Db.set_cache(data)
