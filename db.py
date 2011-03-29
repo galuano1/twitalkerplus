@@ -112,10 +112,18 @@ class TwitterUser(db.Model):
 
   @staticmethod
   def get_by_jid(jid):
-    try:
-      return TwitterUser.all().filter('google_user =', jid)
-    except db.NotSavedError:
-      return []
+    cursor = None
+    while True:
+      query = TwitterUser.all().filter('google_user =', jid).with_cursor(cursor)
+      try:
+        for q in query:
+          yield q
+      except db.Timeout:
+        cursor = query.cursor()
+      except db.NotSavedError:
+        raise GeneratorExit
+      else:
+        break
 
   @staticmethod
   def add(jid, access_token_key, access_token_secret=None, twitter_name=None):

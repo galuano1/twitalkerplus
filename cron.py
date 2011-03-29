@@ -10,11 +10,11 @@ from StringIO import StringIO
 from google.appengine.api import xmpp
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from db import Db, GoogleUser, TwitterUser, IdList, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
 
 class cron_handler(webapp.RequestHandler):
   def get(self, cron_id):
     cron_id = int(cron_id)
-    from db import Db, GoogleUser, TwitterUser, IdList, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
 
     data = GoogleUser.get_all(shard=cron_id)
     for google_user in data:
