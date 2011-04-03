@@ -12,6 +12,7 @@ from pytz.gae import pytz
 from mylocale import gettext, LOCALES
 from google.appengine.ext import webapp
 from google.appengine.api import xmpp, memcache
+from google.appengine.runtime import DeadlineExceededError
 from google.appengine.api.capabilities import CapabilitySet
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -371,7 +372,7 @@ class XMPP_handler(webapp.RequestHandler):
     if self._google_user.display_timeline and self._google_user.enabled_user and self._google_user.msg_template.strip():
       try:
         flag = xmpp.get_presence(self._google_user.jid)
-      except xmpp.Error:
+      except (xmpp.Error, DeadlineExceededError):
         flag = False
       if flag:
         Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
@@ -738,7 +739,7 @@ class XMPP_handler(webapp.RequestHandler):
       if tpl.strip() and self._google_user.display_timeline and self._google_user.enabled_user:
         try:
           flag = xmpp.get_presence(self._google_user.jid)
-        except xmpp.Error:
+        except (xmpp.Error, DeadlineExceededError):
           flag = False
         if flag:
           Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
@@ -781,7 +782,7 @@ class XMPP_handler(webapp.RequestHandler):
           if not self._google_user.enabled_user and self._google_user.display_timeline and self._google_user.msg_template.strip():
             try:
               flag = xmpp.get_presence(self._google_user.jid)
-            except xmpp.Error:
+            except (xmpp.Error, DeadlineExceededError):
               flag = False
             if flag:
               Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
@@ -935,10 +936,10 @@ class XMPP_Unavailable_handler(webapp.RequestHandler):
       u = GoogleUser.get_by_jid(jid)
       if u:
         try:
-          presence = xmpp.get_presence(jid)
+          flag = xmpp.get_presence(jid)
         except xmpp.Error:
-          presence = False
-        if not presence:
+          flag = False
+        if not flag:
           s.delete()
       else:
         s.delete()

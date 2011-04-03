@@ -11,6 +11,7 @@ from google.appengine.api import xmpp
 from google.appengine.api.capabilities import CapabilitySet
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.runtime import DeadlineExceededError
 from db import Db, GoogleUser, TwitterUser, IdList, Session, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
 
 class cron_handler(webapp.RequestHandler):
@@ -21,7 +22,7 @@ class cron_handler(webapp.RequestHandler):
       jid = u.key().name()
       try:
         flag = xmpp.get_presence(jid)
-      except xmpp.Error:
+      except (xmpp.Error, DeadlineExceededError):
         flag = True
       if not flag:
         u.delete()
