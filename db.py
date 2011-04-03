@@ -31,7 +31,13 @@ class Session(db.Model):
         for q in query:
           yield q
       except db.Timeout:
-        cursor = query.cursor()
+        while db.READ_CAPABILITY:
+          try:
+            cursor = query.cursor()
+          except db.Timeout:
+            pass
+          else:
+            break
       else:
         break
 
@@ -106,7 +112,13 @@ class GoogleUser(db.Model):
         for q in query:
           yield q
       except db.Timeout:
-        cursor = query.cursor()
+        while db.READ_CAPABILITY:
+          try:
+            cursor = query.cursor()
+          except db.Timeout:
+            pass
+          else:
+            break
       else:
         break
 
@@ -133,7 +145,13 @@ class TwitterUser(db.Model):
         for q in query:
           yield q
       except db.Timeout:
-        cursor = query.cursor()
+        while db.READ_CAPABILITY:
+          try:
+            cursor = query.cursor()
+          except db.Timeout:
+            pass
+          else:
+            break
       except db.NotSavedError:
         raise GeneratorExit
       else:
