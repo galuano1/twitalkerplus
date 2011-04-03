@@ -12,6 +12,7 @@ from pytz.gae import pytz
 from mylocale import gettext, LOCALES
 from google.appengine.ext import webapp
 from google.appengine.api import xmpp, memcache
+from google.appengine.api.capabilities import CapabilitySet
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 SHORT_COMMANDS = {
@@ -94,7 +95,13 @@ class XMPP_handler(webapp.RequestHandler):
     if result is None:
       return
     if result:
-      message.reply(result)
+      while CapabilitySet('xmpp').is_enabled():
+        try:
+          message.reply(result)
+        except xmpp.Error:
+          pass
+        else:
+          break
     IdList.flush(self._google_user.jid)
     Db.set_datastore(self._google_user)
 

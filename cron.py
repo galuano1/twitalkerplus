@@ -8,6 +8,7 @@ from mylocale import gettext
 from time import time
 from StringIO import StringIO
 from google.appengine.api import xmpp
+from google.appengine.api.capabilities import CapabilitySet
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from db import Db, GoogleUser, TwitterUser, IdList, Session, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
@@ -154,13 +155,25 @@ class cron_handler(webapp.RequestHandler):
         content = utils.parse_statuses(all_statuses, filter_self=True, reverse=False)
         if content.strip():
           IdList.flush(google_user.jid)
-          xmpp.send_message(google_user.jid, content)
+          while CapabilitySet('xmpp').is_enabled():
+            try:
+              xmpp.send_message(google_user.jid, content)
+            except xmpp.Error:
+              pass
+            else:
+              break
       if google_user.display_timeline & MODE_DM:
         try:
           statuses = api._process_result(dm_rpc)
           content = utils.parse_statuses(statuses)
           if content.strip():
-            xmpp.send_message(google_user.jid, _('DIRECT_MESSAGES') + '\n\n' + content)
+            while CapabilitySet('xmpp').is_enabled():
+              try:
+                xmpp.send_message(google_user.jid, _('DIRECT_MESSAGES') + '\n\n' + content)
+              except xmpp.Error:
+                pass
+              else:
+                break
             if statuses[-1]['id'] > google_user.last_dm_id:
               google_user.last_dm_id = statuses[-1]['id']
         except twitter.TwitterInternalServerError:
