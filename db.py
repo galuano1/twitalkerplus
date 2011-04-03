@@ -6,6 +6,7 @@ import sys
 
 from google.appengine.api import memcache
 from google.appengine.ext import db
+from google.appengine.runtime.apiproxy_errors import ApplicationError
 
 _short_id_list = dict()
 
@@ -15,31 +16,7 @@ MODE_LIST = 2
 MODE_HOME = 1
 MODE_NONE = 0
 
-class MyModel(db.Model):
-  def put(self, **kwargs):
-    while db.WRITE_CAPABILITY:
-      try:
-        return super(MyModel, self).put(**kwargs)
-      except db.Timeout:
-        pass
-
-  def delete(self, **kwargs):
-    while db.WRITE_CAPABILITY:
-      try:
-        return super(MyModel, self).delete(**kwargs)
-      except db.Timeout:
-        pass
-
-  @classmethod
-  def get_by_key_name(cls, key_names, parent=None, **kwargs):
-    while db.READ_CAPABILITY:
-      try:
-        return super(MyModel, cls).get_by_key_name(key_names=key_names, parent=parent, **kwargs)
-      except db.Timeout:
-        pass
-
-
-class Session(MyModel):
+class Session(db.Model):
   shard = db.IntegerProperty(required=True)
 
   @staticmethod
@@ -59,7 +36,7 @@ class Session(MyModel):
         break
 
 
-class GoogleUser(MyModel):
+class GoogleUser(db.Model):
   enabled_user = db.StringProperty(default='')
   shard = db.IntegerProperty(required=True)
   interval = db.IntegerProperty(default=3)
@@ -141,7 +118,7 @@ class GoogleUser(MyModel):
       Db.set_datastore(user)
 
 
-class TwitterUser(MyModel):
+class TwitterUser(db.Model):
   access_token_key = db.StringProperty(required=True)
   access_token_secret = db.StringProperty()
   twitter_name = db.StringProperty()
@@ -194,7 +171,7 @@ class TwitterUser(MyModel):
     return user
 
 
-class IdList(MyModel):
+class IdList(db.Model):
   short_id_list = list()
   short_id_list_str = db.TextProperty(default='')
   list_pointer = db.IntegerProperty(default=0)
@@ -268,9 +245,15 @@ class Db:
       except db.BadKeyError:
         pass
 
-    if data.is_saved():
-      Db.set_cache(data)
-      db.run_in_transaction(datastore_set, data)
-    else:
-      db.run_in_transaction(datastore_set, data)
-      Db.set_cache(data)
+    while db.WRITE_CAPABILITY:
+      try:
+        if data.is_saved():
+          Db.set_cache(data)
+          db.run_in_transaction(datastore_set, data)
+        else:
+          db.run_in_transaction(datastore_set, data)
+          Db.set_cache(data)
+      except (db.Timeout, ApplicationError):
+        pass
+      else:
+        break
