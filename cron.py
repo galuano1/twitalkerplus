@@ -69,6 +69,7 @@ class cron_handler(webapp.RequestHandler):
       home_statuses = []
       home_mention_statuses = []
       all_statuses = []
+      at_username = '@' + google_user.enabled_user
 
       if google_user.display_timeline & MODE_HOME or google_user.display_timeline & MODE_MENTION:
         home_rpc = api.get_home_timeline(since_id=google_user.last_msg_id, async=True)
@@ -100,20 +101,6 @@ class cron_handler(webapp.RequestHandler):
           err = StringIO('')
           traceback.print_exc(file=err)
           logging.error(google_user.jid + ' Home:\n' + err.getvalue())
-      if google_user.display_timeline & MODE_LIST:
-        try:
-          statuses = api._process_result(list_rpc)
-          if statuses:
-            all_statuses.extend(statuses)
-            if statuses[0]['id'] > google_user.last_list_id:
-              google_user.last_list_id = statuses[0]['id']
-        except twitter.TwitterInternalServerError:
-          pass
-        except BaseException, e:
-          if 'Not found' not in e.message:
-            err = StringIO('')
-            traceback.print_exc(file=err)
-            logging.error(google_user.jid + ' List:\n' + err.getvalue())
       if google_user.display_timeline & MODE_MENTION:
         try:
           statuses = api._process_result(mention_rpc)
@@ -134,7 +121,6 @@ class cron_handler(webapp.RequestHandler):
               if home_statuses:
                 if home_statuses[0]['id'] > google_user.last_msg_id:
                   google_user.last_msg_id = home_statuses[0]['id']
-                at_username = '@' + google_user.enabled_user
                 home_mention_statuses = [x for x in home_statuses if
                                          at_username in x['text'] and x['id'] > google_user.last_mention_id]
               if home_mention_statuses:
@@ -145,6 +131,23 @@ class cron_handler(webapp.RequestHandler):
           err = StringIO('')
           traceback.print_exc(file=err)
           logging.error(google_user.jid + ' Mention:\n' + err.getvalue())
+      if google_user.display_timeline & MODE_LIST:
+        try:
+          statuses = api._process_result(list_rpc)
+          if statuses:
+            if statuses[0]['id'] > google_user.last_list_id:
+              google_user.last_list_id = statuses[0]['id']
+            for i in range(len(statuses) - 1, -1, -1):
+              if at_username in statuses[i]['text'] and statuses[i]['id'] <= google_user.last_mention_id:
+                del statuses[i]
+            all_statuses.extend(statuses)
+        except twitter.TwitterInternalServerError:
+          pass
+        except BaseException, e:
+          if 'Not found' not in e.message:
+            err = StringIO('')
+            traceback.print_exc(file=err)
+            logging.error(google_user.jid + ' List:\n' + err.getvalue())
       if all_statuses:
         all_statuses.sort(cmp=lambda x, y: cmp(x['id'], y['id']))
         last = all_statuses[-1]['id']
