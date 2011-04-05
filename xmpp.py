@@ -923,9 +923,11 @@ class XMPP_handler(webapp.RequestHandler):
 class XMPP_Available_handler(webapp.RequestHandler):
   def post(self):
     jid = self.request.get('from').split('/')[0]
-    u = GoogleUser.get_by_jid(jid)
-    if u and u.enabled_user and u.display_timeline and u.msg_template.strip():
-      Db.set_datastore(Session(key_name=jid, shard=u.shard))
+    s = Session.get_by_key_name(jid)
+    if not s:
+      u = GoogleUser.get_by_jid(jid)
+      if u and u.enabled_user and u.display_timeline and u.msg_template.strip():
+        Db.set_datastore(Session(key_name=jid, shard=u.shard))
 
 
 class XMPP_Unavailable_handler(webapp.RequestHandler):

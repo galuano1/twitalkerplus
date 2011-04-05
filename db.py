@@ -271,7 +271,7 @@ class Db:
         else:
           db.run_in_transaction(datastore_set, data)
           Db.set_cache(data)
-      except (db.Timeout, ApplicationError):
+      except (db.Timeout, ApplicationError, db.TransactionFailedError):
         pass
       else:
         break
