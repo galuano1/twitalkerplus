@@ -340,7 +340,11 @@ class XMPP_handler(webapp.RequestHandler):
     if not length or (length == 1 and (args[0].isdigit() or (args[0] and args[0][0] == '#' and args[0][1:].isdigit()))):
       if not length:
         short_id = None
-        id = self._user['status']['id']
+        statuses = self._api.get_user_timeline(screen_name=self._google_user.enabled_user, count=1)
+        if statuses:
+          id = statuses[0]['id']
+        else:
+          return _('STATUS_NOT_FOUND') % ''
       elif args[0][0] == '#':
         short_id = int(args[0][1:])
         id = utils.restore_short_id(short_id, self._google_user.jid)
