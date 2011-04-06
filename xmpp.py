@@ -15,6 +15,7 @@ from google.appengine.api import xmpp, memcache
 from google.appengine.runtime import DeadlineExceededError
 from google.appengine.api.capabilities import CapabilitySet
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 
 SHORT_COMMANDS = {
   '@': 'reply',
@@ -49,6 +50,12 @@ class Dummy(object):
 
 class XMPP_handler(webapp.RequestHandler):
   def post(self):
+    try:
+      self.process()
+    except CapabilityDisabledError:
+      xmpp.send_presence(self.request.get('from'), presence_type=xmpp.PRESENCE_SHOW_AWAY)
+
+  def process(self):
     global _locale
     try:
       message = xmpp.Message(self.request.POST)
@@ -369,7 +376,8 @@ class XMPP_handler(webapp.RequestHandler):
           self._google_user.display_timeline |= MODE_DM
         elif a == 'list':
           self._google_user.display_timeline |= MODE_LIST
-    if self._google_user.display_timeline and self._google_user.enabled_user and self._google_user.msg_template.strip():
+    s = Session.get_by_key_name(self._google_user.jid)
+    if not s and self._google_user.display_timeline and self._google_user.enabled_user and self._google_user.msg_template.strip():
       try:
         flag = xmpp.get_presence(self._google_user.jid)
       except (xmpp.Error, DeadlineExceededError):
@@ -736,7 +744,8 @@ class XMPP_handler(webapp.RequestHandler):
       while tpl[-2::] == r'\n':
         tpl = tpl[:len(tpl) - 2] + '\n'
       self._google_user.msg_template = tpl
-      if tpl.strip() and self._google_user.display_timeline and self._google_user.enabled_user:
+      s = Session.get_by_key_name(self._google_user.jid)
+      if not s and tpl.strip() and self._google_user.display_timeline and self._google_user.enabled_user:
         try:
           flag = xmpp.get_presence(self._google_user.jid)
         except (xmpp.Error, DeadlineExceededError):
@@ -927,7 +936,10 @@ class XMPP_Available_handler(webapp.RequestHandler):
     if not s:
       u = GoogleUser.get_by_jid(jid)
       if u and u.enabled_user and u.display_timeline and u.msg_template.strip():
-        Db.set_datastore(Session(key_name=jid, shard=u.shard))
+        try:
+          Db.set_datastore(Session(key_name=jid, shard=u.shard))
+        except CapabilityDisabledError:
+          xmpp.send_presence(jid, presence_type=xmpp.PRESENCE_SHOW_AWAY)
 
 
 class XMPP_Unavailable_handler(webapp.RequestHandler):
@@ -947,20 +959,10 @@ class XMPP_Unavailable_handler(webapp.RequestHandler):
         s.delete()
 
 
-class XMPP_Probe_handler(webapp.RequestHandler):
-  def post(self):
-    jid = self.request.get('from').split('/')[0]
-    try:
-      xmpp.send_presence(jid)
-    except xmpp.Error:
-      pass
-
-
 def main():
   application = webapp.WSGIApplication([('/_ah/xmpp/message/chat/', XMPP_handler),
                                         ('/_ah/xmpp/presence/available/', XMPP_Available_handler),
-                                        ('/_ah/xmpp/presence/unavailable/', XMPP_Unavailable_handler),
-                                        ('/_ah/xmpp/presence/probe/', XMPP_Probe_handler)])
+                                        ('/_ah/xmpp/presence/unavailable/', XMPP_Unavailable_handler)])
   run_wsgi_app(application)
 
 if __name__ == "__main__":

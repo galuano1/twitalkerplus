@@ -11,7 +11,7 @@ from google.appengine.api import xmpp
 from google.appengine.api.capabilities import CapabilitySet
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.runtime import DeadlineExceededError
+from google.appengine.runtime.apiproxy_errors import DeadlineExceededError, CapabilityDisabledError
 from db import Db, GoogleUser, TwitterUser, IdList, Session, MODE_HOME, MODE_LIST, MODE_MENTION, MODE_DM
 
 class cron_handler(webapp.RequestHandler):
@@ -19,6 +19,12 @@ class cron_handler(webapp.RequestHandler):
     cron_id = int(cron_id)
     data = Session.get_all(shard=cron_id)
     for u in data:
+      try:
+        self.process(u)
+      except CapabilityDisabledError:
+        xmpp.send_presence(u.key().name(), presence_show=xmpp.PRESENCE_SHOW_AWAY)
+
+  def process(self, u):
       jid = u.key().name()
       try:
         flag = xmpp.get_presence(jid)
@@ -26,20 +32,20 @@ class cron_handler(webapp.RequestHandler):
         flag = True
       if not flag:
         u.delete()
-        continue
+        return
       google_user = GoogleUser.get_by_jid(jid)
       if google_user is None:
         u.delete()
-        continue
+        return
       time_delta = int(time()) - google_user.last_update
       if time_delta < google_user.interval * 60 - 30:
-        continue
+        return
       _ = lambda x: gettext(x, locale=google_user.locale)
       twitter_user = TwitterUser.get_by_twitter_name(google_user.enabled_user, google_user.jid)
       if twitter_user is None:
         google_user.enabled_user = ''
         Db.set_datastore(google_user)
-        continue
+        return
       api = twitter.Api(consumer_key=config.OAUTH_CONSUMER_KEY,
                         consumer_secret=config.OAUTH_CONSUMER_SECRET,
                         access_token_key=twitter_user.access_token_key,
@@ -55,7 +61,7 @@ class cron_handler(webapp.RequestHandler):
           xmpp.send_message(google_user.jid, _('NO_AUTHENTICATION'))
         else:
           Db.set_cache(google_user)
-        continue
+        return
       finally:
         if google_user.retry > 0:
           google_user.retry = 0
