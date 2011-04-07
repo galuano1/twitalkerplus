@@ -53,7 +53,10 @@ class XMPP_handler(webapp.RequestHandler):
     try:
       self.process()
     except CapabilityDisabledError:
-      xmpp.send_presence(self.request.get('from'), presence_type=xmpp.PRESENCE_SHOW_AWAY)
+      try:
+        xmpp.send_presence(self.request.get('from'), presence_type=xmpp.PRESENCE_SHOW_AWAY)
+      except xmpp.Error:
+        pass
 
   def process(self):
     global _locale
@@ -943,7 +946,10 @@ class XMPP_Available_handler(webapp.RequestHandler):
         try:
           Db.set_datastore(Session(key_name=jid, shard=u.shard))
         except CapabilityDisabledError:
-          xmpp.send_presence(jid, presence_type=xmpp.PRESENCE_SHOW_AWAY)
+          try:
+            xmpp.send_presence(jid, presence_type=xmpp.PRESENCE_SHOW_AWAY)
+          except xmpp.Error:
+            pass
 
 
 class XMPP_Unavailable_handler(webapp.RequestHandler):

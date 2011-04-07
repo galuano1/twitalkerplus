@@ -23,9 +23,15 @@ class cron_handler(webapp.RequestHandler):
       try:
         self.process(u)
       except CapabilityDisabledError:
-        xmpp.send_presence(jid, presence_show=xmpp.PRESENCE_SHOW_AWAY)
+        try:
+          xmpp.send_presence(jid, presence_show=xmpp.PRESENCE_SHOW_AWAY)
+        except xmpp.Error:
+          pass
       else:
-        xmpp.send_presence(jid)
+        try:
+          xmpp.send_presence(jid)
+        except xmpp.Error:
+          pass
 
   def process(self, u):
       jid = u.key().name()
