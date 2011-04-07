@@ -19,10 +19,13 @@ class cron_handler(webapp.RequestHandler):
     cron_id = int(cron_id)
     data = Session.get_all(shard=cron_id)
     for u in data:
+      jid = u.key().name()
       try:
         self.process(u)
       except CapabilityDisabledError:
-        xmpp.send_presence(u.key().name(), presence_show=xmpp.PRESENCE_SHOW_AWAY)
+        xmpp.send_presence(jid, presence_show=xmpp.PRESENCE_SHOW_AWAY)
+      else:
+        xmpp.send_presence(jid)
 
   def process(self, u):
       jid = u.key().name()
