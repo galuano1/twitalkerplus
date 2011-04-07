@@ -963,10 +963,16 @@ class XMPP_Unavailable_handler(webapp.RequestHandler):
         s.delete()
 
 
+class XMPP_Probe_handler(webapp.RequestHandler):
+  def post(self):
+    return
+
+
 def main():
   application = webapp.WSGIApplication([('/_ah/xmpp/message/chat/', XMPP_handler),
                                         ('/_ah/xmpp/presence/available/', XMPP_Available_handler),
-                                        ('/_ah/xmpp/presence/unavailable/', XMPP_Unavailable_handler)])
+                                        ('/_ah/xmpp/presence/unavailable/', XMPP_Unavailable_handler),
+                                        ('/_ah/xmpp/presence/probe/', XMPP_Probe_handler)])
   run_wsgi_app(application)
 
 if __name__ == "__main__":

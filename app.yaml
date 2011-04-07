@@ -41,6 +41,10 @@ handlers:
   script: xmpp.py
   login: admin
 
+- url: /_ah/xmpp/presence/probe/
+  script: xmpp.py
+  login: admin
+
 - url: /admin/.*
   script: $PYTHON_LIB/google/appengine/ext/admin
   login: admin
