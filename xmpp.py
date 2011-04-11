@@ -897,7 +897,7 @@ class XMPP_handler(webapp.RequestHandler):
           return _('INVALID_PIN_CODE') % ''
         oauth_token = twitter_user.access_token_key
       token = oauth.Token(oauth_token)
-      token.set_verifier(args[0])
+      token.set_verifier(args[0].encode('UTF8'))
       consumer = oauth.Consumer(config.OAUTH_CONSUMER_KEY, config.OAUTH_CONSUMER_SECRET)
       client = oauth.Client(consumer, token)
       resp = client.request(twitter.ACCESS_TOKEN_URL, "POST")
