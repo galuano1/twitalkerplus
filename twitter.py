@@ -446,7 +446,7 @@ class Api(object):
     try:
       json = simplejson.loads(response.content)
     except ValueError:
-      return None
+      raise TwitterInternalServerError('500 Internal Server Error')
     except BaseException, e:
       if '500 Internal Server Error' in response.content:
         raise TwitterInternalServerError('500 Internal Server Error')
