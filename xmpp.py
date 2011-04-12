@@ -5,6 +5,7 @@ import oauth
 import cgi
 import logging
 import config
+import re
 
 from string import Template
 from db import TwitterUser, GoogleUser, Db, Session, IdList, MODE_LIST, MODE_MENTION, MODE_DM, MODE_HOME
@@ -39,6 +40,7 @@ SHORT_COMMANDS = {
 
 _locale = config.DEFAULT_LANGUAGE
 _ = lambda x: gettext(x, locale=_locale)
+_check_username = lambda username: bool(re.match(r'^\w+$', username))
 
 class Dummy(object):
   def __getattr__(self, item):
@@ -258,7 +260,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_follow(self, args):
-    if len(args) == 1 and args[0].isalnum():
+    if len(args) == 1 and _check_username(args[0]):
       try:
         self._api.create_friendship(args[0])
       except twitter.TwitterError, e:
@@ -274,7 +276,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_unfollow(self, args):
-    if len(args) == 1 and args[0].isalnum():
+    if len(args) == 1 and _check_username(args[0]):
       try:
         self._api.destroy_friendship(args[0])
       except twitter.TwitterError, e:
@@ -288,7 +290,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_if(self, args):
-    if len(args) == 1 and args[0].isalnum():
+    if len(args) == 1 and _check_username(args[0]):
       try:
         result = self._api.exists_friendship(self._google_user.enabled_user, args[0])
       except twitter.TwitterError, e:
@@ -303,7 +305,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_block(self, args):
-    if len(args) == 1 and args[0].isalnum():
+    if len(args) == 1 and _check_username(args[0]):
       try:
         self._api.create_block(args[0])
       except twitter.TwitterError, e:
@@ -315,7 +317,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_spam(self, args):
-    if len(args) == 1 and args[0].isalnum():
+    if len(args) == 1 and _check_username(args[0]):
       try:
         self._api.report_spam(args[0])
       except twitter.TwitterError, e:
@@ -327,7 +329,7 @@ class XMPP_handler(webapp.RequestHandler):
     raise NotImplementedError
 
   def func_unblock(self, args):
-    if len(args) == 1 and args[0].isalnum():
+    if len(args) == 1 and _check_username(args[0]):
       try:
         self._api.destroy_block(args[0])
       except twitter.TwitterError, e:
@@ -432,9 +434,11 @@ class XMPP_handler(webapp.RequestHandler):
           list_id = path[1]
         else:
           raise NotImplementedError
-      else:
+      elif _check_username(args[0]):
         user = args[0]
         list_id = args[1]
+      else:
+        raise NotImplementedError
       try:
         response = self._api.get_list(user, list_id)
       except twitter.TwitterError, e:
@@ -784,7 +788,7 @@ class XMPP_handler(webapp.RequestHandler):
     length = len(args)
     if length > 1:
       raise NotImplementedError
-    else:
+    elif _check_username(args[0]):
       twitter_users = TwitterUser.get_by_jid(self._google_user.jid)
       twitter_users_name = [u.twitter_name for u in twitter_users if u.twitter_name is not None]
       if not length:
@@ -804,8 +808,7 @@ class XMPP_handler(webapp.RequestHandler):
               Db.set_datastore(Session(key_name=self._google_user.jid, shard=self._google_user.shard))
           self._google_user.enabled_user = twitter_users_name[i]
           return _('ENABLED_TWITTER_USER_CHANGED') % self._google_user.enabled_user
-        else:
-          return _('NOT_ASSOCIATED_TWITTER_USER')
+    return _('NOT_ASSOCIATED_TWITTER_USER')
 
   def func_user(self, args):
     length = len(args)
@@ -814,7 +817,7 @@ class XMPP_handler(webapp.RequestHandler):
     else:
       if not length:
         user = self._user['screen_name']
-      elif args[0].isalnum():
+      elif _check_username(args[0]):
         user = args[0]
       else:
         raise NotImplementedError
