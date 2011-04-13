@@ -788,13 +788,13 @@ class XMPP_handler(webapp.RequestHandler):
     length = len(args)
     if length > 1:
       raise NotImplementedError
-    elif _check_username(args[0]):
+    else:
       twitter_users = TwitterUser.get_by_jid(self._google_user.jid)
       twitter_users_name = [u.twitter_name for u in twitter_users if u.twitter_name is not None]
       if not length:
         return _('NOW_USING') % self._google_user.enabled_user + '\n'\
         + _('ALL_TWITTER_USERS_NAME') % '\n'.join(twitter_users_name)
-      else:
+      elif _check_username(args[0]):
         twitter_users_name_ci = [x.lower() for x in twitter_users_name]
         twitter_name_ci = args[0].lower()
         if twitter_name_ci in twitter_users_name_ci:
