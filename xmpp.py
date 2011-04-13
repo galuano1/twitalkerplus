@@ -659,11 +659,9 @@ class XMPP_handler(webapp.RequestHandler):
       if status is None:
         return ''
       if length > 1:
-        user_msg = ' '.join(args[1:])
+        user_msg = ' '.join(args[1:]) + ' '
       else:
         user_msg = ''
-      if user_msg and user_msg[-1].isalnum():
-        user_msg += ' '
       message = u'%sRT @%s:%s' % (user_msg, status['user']['screen_name'], status['text'])
       if len(message) > twitter.CHARACTER_LIMIT:
         message = message[:138] + '..'
