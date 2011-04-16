@@ -292,7 +292,7 @@ class XMPP_handler(webapp.RequestHandler):
   def func_if(self, args):
     if len(args) == 1 and _check_username(args[0]):
       try:
-        result = self._api.exists_friendship(self._google_user.enabled_user, args[0])
+        result = self._api.exists_friendship(args[0], self._google_user.enabled_user)
       except twitter.TwitterError, e:
         if 'Could not find both specified users' in e.message:
           return _('USER_NOT_FOUND') % args[0]
